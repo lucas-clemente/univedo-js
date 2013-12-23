@@ -26,3 +26,8 @@ exports['cbor'] =
     test.equal new univedo.Message("\x38\x63".b()).read(), -100, 'reads nint'
     test.equal new univedo.Message("\x39\x03\xe7".b()).read(), -1000, 'reads nint'
     test.done()
+
+  readsFloats: (test) ->
+    test.equal new univedo.Message("\xfa\x47\xc3\x50\x00".b()).read(), 100000.0, 'reads floats'
+    test.equal new univedo.Message("\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b()).read(), 1.1, 'reads floats'
+    test.done()

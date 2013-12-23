@@ -24,7 +24,6 @@
       FALSE: 20,
       TRUE: 21,
       NULL: 22,
-      FLOAT16: 25,
       FLOAT32: 26,
       FLOAT64: 27
     };
@@ -77,7 +76,16 @@
                 return true;
               case VariantSimple.NULL:
                 return null;
+              case VariantSimple.FLOAT32:
+                return this.getDataView(4).getFloat32(0);
+              case VariantSimple.FLOAT64:
+                return this.getDataView(8).getFloat64(0);
+              default:
+                throw "invalid simple in cbor protocol";
             }
+            break;
+          default:
+            throw "invalid major in cbor protocol";
         }
       };
 

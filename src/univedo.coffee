@@ -28,7 +28,6 @@
     FALSE: 20
     TRUE: 21
     NULL: 22
-    FLOAT16: 25
     FLOAT32: 26
     FLOAT64: 27
 
@@ -67,6 +66,10 @@
             when VariantSimple.FALSE then false
             when VariantSimple.TRUE then true
             when VariantSimple.NULL then null
+            when VariantSimple.FLOAT32 then @getDataView(4).getFloat32(0)
+            when VariantSimple.FLOAT64 then @getDataView(8).getFloat64(0)
+            else throw "invalid simple in cbor protocol"
+        else throw "invalid major in cbor protocol"
 
   null
 )(if exports? then exports else this)
