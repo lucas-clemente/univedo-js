@@ -32,18 +32,41 @@
     FLOAT32: 26
     FLOAT64: 27
 
-  exports.cbor =
-    read: (buf) ->
-      typeInt = new DataView(buf).getUint8(0)
+  exports.Message = class Message
+    constructor: (@buffer) ->
+      @offset = 0
+
+    getDataView: (len) ->
+      dv = new DataView(@buffer, @offset, len)
+      @offset += len
+      dv
+
+    getLen: (typeInt) ->
+      smallLen = typeInt & 0x1F
+      switch smallLen
+        when 24
+          @getDataView(1).getUint8(0)
+        when 25
+          @getDataView(2).getUint16(0)
+        when 26
+          @getDataView(4).getUint32(0)
+        when 27
+          throw "int64 not yet supported in javascript!"
+        else
+          smallLen
+
+    read: ->
+      typeInt = @getDataView(1).getUint8(0)
       major = typeInt >> 5
 
       switch major
+        when VariantMajor.UINT then @getLen(typeInt)
+        when VariantMajor.NEGINT then -@getLen(typeInt)-1
         when VariantMajor.SIMPLE
           switch typeInt & 0x1F
             when VariantSimple.FALSE then false
             when VariantSimple.TRUE then true
             when VariantSimple.NULL then null
 
-
-
+  null
 )(if exports? then exports else this)
