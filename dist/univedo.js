@@ -60,7 +60,7 @@
       };
 
       Message.prototype.read = function() {
-        var major, typeInt;
+        var i, len, major, obj, typeInt, _i, _j, _ref, _ref1, _results;
         typeInt = this.getDataView(1).getUint8(0);
         major = typeInt >> 5;
         switch (major) {
@@ -84,6 +84,27 @@
                 throw "invalid simple in cbor protocol";
             }
             break;
+          case VariantMajor.BYTESTRING:
+            len = this.getLen(typeInt);
+            return this.buffer.slice(this.offset, this.offset += len);
+          case VariantMajor.TEXTSTRING:
+            len = this.getLen(typeInt);
+            return String.fromCharCode.apply(null, new Uint8Array(this.buffer.slice(this.offset, this.offset += len)));
+          case VariantMajor.ARRAY:
+            len = this.getLen(typeInt);
+            _results = [];
+            for (i = _i = 0, _ref = len - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+              _results.push(this.read());
+            }
+            return _results;
+            break;
+          case VariantMajor.MAP:
+            len = this.getLen(typeInt);
+            obj = {};
+            for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+              obj[this.read()] = this.read();
+            }
+            return obj;
           default:
             throw "invalid major in cbor protocol";
         }

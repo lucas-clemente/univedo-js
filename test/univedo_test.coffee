@@ -3,7 +3,7 @@ univedo = require('../lib/univedo.js')
 String.prototype.b = ->
   buf = new ArrayBuffer(@length)
   bufView = new Uint8Array(buf)
-  for i in [0..@length]
+  for i in [0..@length-1]
     bufView[i] = @charCodeAt(i)
   buf
 
@@ -31,3 +31,15 @@ exports['cbor'] =
     test.equal new univedo.Message("\xfa\x47\xc3\x50\x00".b()).read(), 100000.0, 'reads floats'
     test.equal new univedo.Message("\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b()).read(), 1.1, 'reads floats'
     test.done()
+
+  readsStrings: (test) ->
+    test.deepEqual new univedo.Message("\x46foobar".b()).read(), "foobar".b(), 'reads blobs'
+    test.equal new univedo.Message("\x66foobar".b()).read(), "foobar", 'reads strings'
+    # test.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).read(), "föobar", 'reads strings'
+    test.done()
+
+  readsCollections: (test) ->
+    test.deepEqual new univedo.Message("\x82\x63foo\x63bar".b()).read(), ["foo", "bar"], 'reads arrays'
+    test.deepEqual new univedo.Message("\xa2\x63bar\x02\x63foo\x01".b()).read(), {foo: 1, bar: 2}, 'reads maps'
+    test.done()
+

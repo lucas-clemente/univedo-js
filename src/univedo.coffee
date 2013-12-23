@@ -69,6 +69,22 @@
             when VariantSimple.FLOAT32 then @getDataView(4).getFloat32(0)
             when VariantSimple.FLOAT64 then @getDataView(8).getFloat64(0)
             else throw "invalid simple in cbor protocol"
+        when VariantMajor.BYTESTRING
+          len = @getLen(typeInt)
+          @buffer.slice(@offset, @offset += len)
+        when VariantMajor.TEXTSTRING
+          len = @getLen(typeInt)
+          # TODO doesn't work for non-ascii, see test
+          String.fromCharCode.apply(null, new Uint8Array(@buffer.slice(@offset, @offset += len)))
+        when VariantMajor.ARRAY
+          len = @getLen(typeInt)
+          @read() for i in [0..len-1]
+        when VariantMajor.MAP
+          len = @getLen(typeInt)
+          obj = {}
+          for i in [0..len-1]
+            obj[@read()] = @read()
+          obj
         else throw "invalid major in cbor protocol"
 
   null
