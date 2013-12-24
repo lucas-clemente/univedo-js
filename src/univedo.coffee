@@ -157,6 +157,7 @@
         when typeof obj == "number"
           switch
             when obj >= 0 then @sendLen(VariantMajor.UINT, obj)
+            when obj < 0 then @sendLen(VariantMajor.NEGINT, -obj-1)
         else throw "unsupported object in cbor protocol"
 
   null

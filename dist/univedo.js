@@ -181,6 +181,8 @@
             switch (false) {
               case !(obj >= 0):
                 return this.sendLen(VariantMajor.UINT, obj);
+              case !(obj < 0):
+                return this.sendLen(VariantMajor.NEGINT, -obj - 1);
             }
             break;
           default:
