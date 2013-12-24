@@ -36,6 +36,12 @@
   byteArrayFromArray = (arr) ->
     byteArrayFromString(String.fromCharCode.apply(null, arr))
 
+  concatArrayBufs = (buf1, buf2) ->
+    tmp = new Uint8Array(buf1.byteLength + buf2.byteLength)
+    tmp.set(new Uint8Array(buf1), 0)
+    tmp.set(new Uint8Array(buf2), buf1.byteLength)
+    tmp.buffer
+
   VariantMajor =
     UINT: 0
     NEGINT: 1
@@ -156,8 +162,12 @@
         when obj == false then @sendSimple(VariantSimple.FALSE)
         when typeof obj == "number"
           switch
-            when obj >= 0 then @sendLen(VariantMajor.UINT, obj)
-            when obj < 0 then @sendLen(VariantMajor.NEGINT, -obj-1)
+            when obj >= 0 && obj < 0x100000000 && (obj % 1 == 0) then @sendLen(VariantMajor.UINT, obj)
+            when obj < 0 && obj >= -0x100000000 && (obj % 1 == 0) then @sendLen(VariantMajor.NEGINT, -obj-1)
+            else
+              ba = new ArrayBuffer(8)
+              new DataView(ba).setFloat64(0, obj)
+              concatArrayBufs(@sendSimple(VariantSimple.FLOAT64), ba)
         else throw "unsupported object in cbor protocol"
 
   null

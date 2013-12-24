@@ -67,3 +67,8 @@ exports['cbor'] =
     t.deepEqual new univedo.Message().sendImpl(-100), "\x38\x63".b(), 'sends nint'
     t.deepEqual new univedo.Message().sendImpl(-1000), "\x39\x03\xe7".b(), 'sends nint'
     t.done()
+
+  sendsFloats: (t) ->
+    t.deepEqual new univedo.Message().sendImpl(1.1), "\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b(), 'sends float32'
+    t.deepEqual new univedo.Message().sendImpl(1.0e+300), "\xfb\x7e\x37\xe4\x3c\x88\x00\x75\x9c".b(), 'sends float64'
+    t.done()
