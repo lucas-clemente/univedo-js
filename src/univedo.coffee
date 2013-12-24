@@ -168,6 +168,10 @@
               ba = new ArrayBuffer(8)
               new DataView(ba).setFloat64(0, obj)
               concatArrayBufs(@sendSimple(VariantSimple.FLOAT64), ba)
+        when typeof obj == "string"
+          concatArrayBufs(@sendLen(VariantMajor.TEXTSTRING, obj.length), byteArrayFromString(obj))
+        when obj.constructor.name == "ArrayBuffer"
+          concatArrayBufs(@sendLen(VariantMajor.BYTESTRING, obj.byteLength), obj)
         else throw "unsupported object in cbor protocol"
 
   null

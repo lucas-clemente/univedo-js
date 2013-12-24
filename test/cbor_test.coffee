@@ -35,7 +35,7 @@ exports['cbor'] =
   readsStrings: (t) ->
     t.deepEqual new univedo.Message("\x46foobar".b()).read(), "foobar".b(), 'reads blobs'
     t.equal new univedo.Message("\x66foobar".b()).read(), "foobar", 'reads strings'
-    # t.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).read(), "föobar", 'reads strings'
+    # t.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).read(), "föobar", 'reads utf8strings'
     t.done()
 
   readsCollections: (t) ->
@@ -71,4 +71,10 @@ exports['cbor'] =
   sendsFloats: (t) ->
     t.deepEqual new univedo.Message().sendImpl(1.1), "\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b(), 'sends float32'
     t.deepEqual new univedo.Message().sendImpl(1.0e+300), "\xfb\x7e\x37\xe4\x3c\x88\x00\x75\x9c".b(), 'sends float64'
+    t.done()
+
+  sendsStrings: (t) ->
+    t.deepEqual new univedo.Message().sendImpl("foobar".b()), "\x46foobar".b(), 'sends blobs'
+    t.deepEqual new univedo.Message().sendImpl("foobar"), "\x66foobar".b(), 'sends strings'
+    # t.deepEqual new univedo.Message().sendImpl("föobar"), "\x66f\xc3\xb6obar".b(), 'sends utf8strings'
     t.done()
