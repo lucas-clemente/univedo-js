@@ -122,13 +122,32 @@
               case VariantTag.DATETIME:
                 return new Date(this.read());
               case VariantTag.UUID:
-                return raw2Uuid(this.buffer.slice(this.offset, this.offset += 16));
+                return raw2Uuid(this.read());
               default:
                 throw "invalid tag in cbor protocol";
             }
             break;
           default:
             throw "invalid major in cbor protocol";
+        }
+      };
+
+      Message.prototype.sendSimple = function(type) {
+        return String.fromCharCode(VariantMajor.SIMPLE << 5 | type);
+      };
+
+      Message.prototype.sendTag = function(tag) {
+        return String.fromCharCode(VariantMajor.TAG << 5 | tag);
+      };
+
+      Message.prototype.sendImpl = function(obj) {
+        switch (obj) {
+          case null:
+            return this.sendSimple(VariantSimple.NULL);
+          case true:
+            return this.sendSimple(VariantSimple.TRUE);
+          case false:
+            return this.sendSimple(VariantSimple.FALSE);
         }
       };
 

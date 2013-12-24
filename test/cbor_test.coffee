@@ -53,5 +53,7 @@ exports['cbor'] =
     test.done()
 
   sendsSimple: (test) ->
-    test.equal new univedo.Message().sendImpl(null), "\xf6".b(), 'sends null'
+    test.equal new univedo.Message().sendImpl(null), "\xf6", 'sends null'
+    test.equal new univedo.Message().sendImpl(true), "\xf5", 'sends true'
+    test.equal new univedo.Message().sendImpl(false), "\xf4", 'sends false'
     test.done()

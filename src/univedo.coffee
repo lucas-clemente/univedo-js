@@ -53,6 +53,9 @@
     constructor: (@buffer) ->
       @offset = 0
 
+
+    # Receiving
+
     getDataView: (len) ->
       dv = new DataView(@buffer, @offset, len)
       @offset += len
@@ -111,6 +114,21 @@
               raw2Uuid(@read())
             else throw "invalid tag in cbor protocol"
         else throw "invalid major in cbor protocol"
+
+
+    # Sending
+
+    sendSimple: (type) ->
+      String.fromCharCode(VariantMajor.SIMPLE << 5 | type)
+
+    sendTag: (tag) ->
+      String.fromCharCode(VariantMajor.TAG << 5 | tag)
+
+    sendImpl: (obj) ->
+      switch obj
+        when null then @sendSimple(VariantSimple.NULL)
+        when true then @sendSimple(VariantSimple.TRUE)
+        when false then @sendSimple(VariantSimple.FALSE)
 
   null
 )(if exports? then exports else this)
