@@ -15,14 +15,26 @@
 
   raw2Uuid = (buf) ->
     i = 0
-    return  byteToHex[buf[i++]] + byteToHex[buf[i++]] +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]] +
-            byteToHex[buf[i++]] + byteToHex[buf[i++]]
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+    byteToHex[buf[i++]] + byteToHex[buf[i++]]
+
+  # Create a ByteArray from a String
+  byteArrayFromString = (s) ->
+    buf = new ArrayBuffer(s.length)
+    bufView = new Uint8Array(buf)
+    for i in [0..s.length-1]
+      bufView[i] = s.charCodeAt(i)
+    buf
+
+  # Create a ByteArray from an array of bytes (as number)
+  byteArrayFromArray = (arr) ->
+    byteArrayFromString(String.fromCharCode.apply(null, arr))
 
   VariantMajor =
     UINT: 0
@@ -119,16 +131,33 @@
     # Sending
 
     sendSimple: (type) ->
-      String.fromCharCode(VariantMajor.SIMPLE << 5 | type)
+      byteArrayFromArray([VariantMajor.SIMPLE << 5 | type])
 
     sendTag: (tag) ->
-      String.fromCharCode(VariantMajor.TAG << 5 | tag)
+      byteArrayFromArray([VariantMajor.TAG << 5 | tag])
+
+    sendLen: (major, len) ->
+      typeInt = major << 5
+      switch
+        when len <= 23
+          byteArrayFromArray([typeInt | len])
+        when len < 0x100
+          byteArrayFromArray([typeInt | 24, len])
+        when len < 0x10000
+          byteArrayFromArray([typeInt | 25, len >> 8, len & 0xff])
+        when len < 0x100000000
+          byteArrayFromArray([typeInt | 26, len >> 24, len >> 16, len >> 8, len & 0xff])
+        else throw "sendLen() called with non-uint"
 
     sendImpl: (obj) ->
-      switch obj
-        when null then @sendSimple(VariantSimple.NULL)
-        when true then @sendSimple(VariantSimple.TRUE)
-        when false then @sendSimple(VariantSimple.FALSE)
+      switch
+        when obj == null then @sendSimple(VariantSimple.NULL)
+        when obj == true then @sendSimple(VariantSimple.TRUE)
+        when obj == false then @sendSimple(VariantSimple.FALSE)
+        when typeof obj == "number"
+          switch
+            when obj >= 0 then @sendLen(VariantMajor.UINT, obj)
+        else throw "unsupported object in cbor protocol"
 
   null
 )(if exports? then exports else this)
