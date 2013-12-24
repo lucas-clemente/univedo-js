@@ -1,7 +1,17 @@
 (function() {
 
   (function(exports) {
-    var Message, VariantMajor, VariantSimple, VariantTag;
+    var Message, VariantMajor, VariantSimple, VariantTag, byteToHex, hexToByte, i, raw2Uuid, _i;
+    byteToHex = [];
+    hexToByte = {};
+    for (i = _i = 0; _i <= 255; i = ++_i) {
+      byteToHex[i] = (i + 0x100).toString(16).substr(1);
+      hexToByte[byteToHex[i]] = i;
+    }
+    raw2Uuid = function(buf) {
+      i = 0;
+      return byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]];
+    };
     VariantMajor = {
       UINT: 0,
       NEGINT: 1,
@@ -60,7 +70,7 @@
       };
 
       Message.prototype.read = function() {
-        var i, len, major, obj, typeInt, _i, _j, _ref, _ref1, _results;
+        var len, major, obj, tag, typeInt, _j, _k, _ref, _ref1, _results;
         typeInt = this.getDataView(1).getUint8(0);
         major = typeInt >> 5;
         switch (major) {
@@ -93,7 +103,7 @@
           case VariantMajor.ARRAY:
             len = this.getLen(typeInt);
             _results = [];
-            for (i = _i = 0, _ref = len - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+            for (i = _j = 0, _ref = len - 1; 0 <= _ref ? _j <= _ref : _j >= _ref; i = 0 <= _ref ? ++_j : --_j) {
               _results.push(this.read());
             }
             return _results;
@@ -101,10 +111,22 @@
           case VariantMajor.MAP:
             len = this.getLen(typeInt);
             obj = {};
-            for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+            for (i = _k = 0, _ref1 = len - 1; 0 <= _ref1 ? _k <= _ref1 : _k >= _ref1; i = 0 <= _ref1 ? ++_k : --_k) {
               obj[this.read()] = this.read();
             }
             return obj;
+          case VariantMajor.TAG:
+            tag = this.getLen(typeInt);
+            switch (tag) {
+              case VariantTag.TIME:
+              case VariantTag.DATETIME:
+                return new Date(this.read());
+              case VariantTag.UUID:
+                return raw2Uuid(this.buffer.slice(this.offset, this.offset += 16));
+              default:
+                throw "invalid tag in cbor protocol";
+            }
+            break;
           default:
             throw "invalid major in cbor protocol";
         }

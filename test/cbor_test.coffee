@@ -43,3 +43,15 @@ exports['cbor'] =
     test.deepEqual new univedo.Message("\xa2\x63bar\x02\x63foo\x01".b()).read(), {foo: 1, bar: 2}, 'reads maps'
     test.done()
 
+  readsTimes: (test) ->
+    # test.deepEqual new univedo.Message("\xc9\x1b\x00\x04\xDA\x8B\x0D\xFF\x7F\x40".b()).read(), new Date(1366190677), 'reads datetimes'
+    # test.deepEqual new univedo.Message("\xc8\x1b\x00\x04\xDA\x8B\x0D\xFF\x7F\x40".b()).read(), 1366190677, 'reads times'
+    test.done()
+
+  readsUuids: (test) ->
+    test.equal new univedo.Message("\xc7\x50\x68\x4E\xF8\x95\x72\xA2\x42\x98\xBC\x5B\x58\x0F\x1C\x1D\x27\x07".b()).read(), "684ef895-72a2-4298-bc5b-580f1c1d2707", 'reads uuids'
+    test.done()
+
+  sendsSimple: (test) ->
+    test.equal new univedo.Message().sendImpl(null), "\xf6".b(), 'sends null'
+    test.done()

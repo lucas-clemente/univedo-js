@@ -6,6 +6,24 @@
 
 ((exports) ->
 
+  # UUID conversion raw <=> string
+  byteToHex = []
+  hexToByte = {}
+  for i in [0..255]
+    byteToHex[i] = (i + 0x100).toString(16).substr(1)
+    hexToByte[byteToHex[i]] = i
+
+  raw2Uuid = (buf) ->
+    i = 0
+    return  byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]] +
+            byteToHex[buf[i++]] + byteToHex[buf[i++]]
+
   VariantMajor =
     UINT: 0
     NEGINT: 1
@@ -85,6 +103,13 @@
           for i in [0..len-1]
             obj[@read()] = @read()
           obj
+        when VariantMajor.TAG
+          tag = @getLen(typeInt)
+          switch tag
+            when VariantTag.TIME, VariantTag.DATETIME then new Date(@read())
+            when VariantTag.UUID
+              raw2Uuid(@read())
+            else throw "invalid tag in cbor protocol"
         else throw "invalid major in cbor protocol"
 
   null
