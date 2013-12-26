@@ -44,8 +44,8 @@ exports['cbor'] =
     t.done()
 
   readsTimes: (t) ->
-    # t.deepEqual new univedo.Message("\xc9\x1b\x00\x04\xDA\x8B\x0D\xFF\x7F\x40".b()).read(), new Date(1366190677), 'reads datetimes'
-    # t.deepEqual new univedo.Message("\xc8\x1b\x00\x04\xDA\x8B\x0D\xFF\x7F\x40".b()).read(), 1366190677, 'reads times'
+    t.deepEqual new univedo.Message("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a".b()).read(), new Date("2013-03-21T20:04:00Z"), 'reads datetimes'
+    t.deepEqual new univedo.Message("\xc1\x1a\x51\x4b\x67\xb0".b()).read(), new Date(1363896240), 'reads times'
     t.done()
 
   readsUuids: (t) ->
@@ -83,4 +83,8 @@ exports['cbor'] =
     t.deepEqual new univedo.Message().sendImpl(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'
     # The exact order of keys in an object is undefined, but this does the job as of node v0.10.24
     t.deepEqual new univedo.Message().sendImpl({foo: 1, bar: 2}), "\xa2\x63foo\x01\x63bar\x02".b(), 'sends maps'
+    t.done()
+
+  sendsTimes: (t) ->
+    t.deepEqual new univedo.Message().sendImpl(new Date("2013-03-21T20:04:00Z")), "\xc0\x78\x18\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30.000\x5a".b(), 'sends datetimes'
     t.done()

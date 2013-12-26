@@ -51,11 +51,11 @@
       SIMPLE: 7
     };
     CborTag = {
+      DATETIME: 0,
+      TIME: 1,
       DECIMAL: 4,
       REMOTEOBJECT: 6,
       UUID: 7,
-      TIME: 8,
-      DATETIME: 9,
       SQL: 10
     };
     CborSimple = {
@@ -146,8 +146,9 @@
           case CborMajor.TAG:
             tag = this.getLen(typeInt);
             switch (tag) {
-              case CborTag.TIME:
               case CborTag.DATETIME:
+                return new Date(this.read());
+              case CborTag.TIME:
                 return new Date(this.read());
               case CborTag.UUID:
                 return raw2Uuid(this.read());
@@ -226,6 +227,8 @@
               bufs.push(this.sendImpl(obj[key]));
             }
             return concatArrayBufs(bufs);
+          case obj.constructor.name !== "Date":
+            return concatArrayBufs([this.sendTag(CborTag.DATETIME), this.sendImpl(obj.toISOString())]);
           default:
             throw "unsupported object in cbor protocol";
         }

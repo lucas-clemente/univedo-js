@@ -57,11 +57,11 @@
     SIMPLE: 7
 
   CborTag =
+    DATETIME: 0
+    TIME: 1
     DECIMAL: 4
     REMOTEOBJECT: 6
     UUID: 7
-    TIME: 8
-    DATETIME: 9
     SQL: 10
 
   CborSimple =
@@ -131,7 +131,8 @@
         when CborMajor.TAG
           tag = @getLen(typeInt)
           switch tag
-            when CborTag.TIME, CborTag.DATETIME then new Date(@read())
+            when CborTag.DATETIME then new Date(@read())
+            when CborTag.TIME then new Date(@read())
             when CborTag.UUID
               raw2Uuid(@read())
             else throw "invalid tag in cbor protocol"
@@ -196,6 +197,11 @@
             bufs.push(@sendImpl(key)) 
             bufs.push(@sendImpl(obj[key])) 
           concatArrayBufs(bufs)
+        when obj.constructor.name == "Date"
+          concatArrayBufs([
+            @sendTag(CborTag.DATETIME),
+            @sendImpl(obj.toISOString())
+          ])
         else throw "unsupported object in cbor protocol"
 
   null
