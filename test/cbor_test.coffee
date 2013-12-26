@@ -81,5 +81,6 @@ exports['cbor'] =
 
   sendsCollections: (t) ->
     t.deepEqual new univedo.Message().sendImpl(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'
+    # The exact order of keys in an object is undefined, but this does the job as of node v0.10.24
     t.deepEqual new univedo.Message().sendImpl({foo: 1, bar: 2}), "\xa2\x63foo\x01\x63bar\x02".b(), 'sends maps'
     t.done()
