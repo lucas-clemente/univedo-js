@@ -1,7 +1,7 @@
 (function() {
 
   (function(exports) {
-    var Message, VariantMajor, VariantSimple, VariantTag, byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
+    var CborMajor, CborSimple, CborTag, Message, byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
     byteToHex = [];
     hexToByte = {};
     for (i = _i = 0; _i <= 255; i = ++_i) {
@@ -24,14 +24,23 @@
     byteArrayFromArray = function(arr) {
       return byteArrayFromString(String.fromCharCode.apply(null, arr));
     };
-    concatArrayBufs = function(buf1, buf2) {
-      var tmp;
-      tmp = new Uint8Array(buf1.byteLength + buf2.byteLength);
-      tmp.set(new Uint8Array(buf1), 0);
-      tmp.set(new Uint8Array(buf2), buf1.byteLength);
+    concatArrayBufs = function(bufs) {
+      var b, pos, tmp, totalLength, _j, _k, _len, _len1;
+      totalLength = 0;
+      for (_j = 0, _len = bufs.length; _j < _len; _j++) {
+        b = bufs[_j];
+        totalLength += b.byteLength;
+      }
+      tmp = new Uint8Array(totalLength);
+      pos = 0;
+      for (_k = 0, _len1 = bufs.length; _k < _len1; _k++) {
+        b = bufs[_k];
+        tmp.set(new Uint8Array(b), pos);
+        pos += b.byteLength;
+      }
       return tmp.buffer;
     };
-    VariantMajor = {
+    CborMajor = {
       UINT: 0,
       NEGINT: 1,
       BYTESTRING: 2,
@@ -41,7 +50,7 @@
       TAG: 6,
       SIMPLE: 7
     };
-    VariantTag = {
+    CborTag = {
       DECIMAL: 4,
       REMOTEOBJECT: 6,
       UUID: 7,
@@ -49,7 +58,7 @@
       DATETIME: 9,
       SQL: 10
     };
-    VariantSimple = {
+    CborSimple = {
       FALSE: 20,
       TRUE: 21,
       NULL: 22,
@@ -93,33 +102,33 @@
         typeInt = this.getDataView(1).getUint8(0);
         major = typeInt >> 5;
         switch (major) {
-          case VariantMajor.UINT:
+          case CborMajor.UINT:
             return this.getLen(typeInt);
-          case VariantMajor.NEGINT:
+          case CborMajor.NEGINT:
             return -this.getLen(typeInt) - 1;
-          case VariantMajor.SIMPLE:
+          case CborMajor.SIMPLE:
             switch (typeInt & 0x1F) {
-              case VariantSimple.FALSE:
+              case CborSimple.FALSE:
                 return false;
-              case VariantSimple.TRUE:
+              case CborSimple.TRUE:
                 return true;
-              case VariantSimple.NULL:
+              case CborSimple.NULL:
                 return null;
-              case VariantSimple.FLOAT32:
+              case CborSimple.FLOAT32:
                 return this.getDataView(4).getFloat32(0);
-              case VariantSimple.FLOAT64:
+              case CborSimple.FLOAT64:
                 return this.getDataView(8).getFloat64(0);
               default:
                 throw "invalid simple in cbor protocol";
             }
             break;
-          case VariantMajor.BYTESTRING:
+          case CborMajor.BYTESTRING:
             len = this.getLen(typeInt);
             return this.buffer.slice(this.offset, this.offset += len);
-          case VariantMajor.TEXTSTRING:
+          case CborMajor.TEXTSTRING:
             len = this.getLen(typeInt);
             return String.fromCharCode.apply(null, new Uint8Array(this.buffer.slice(this.offset, this.offset += len)));
-          case VariantMajor.ARRAY:
+          case CborMajor.ARRAY:
             len = this.getLen(typeInt);
             _results = [];
             for (i = _j = 0, _ref = len - 1; 0 <= _ref ? _j <= _ref : _j >= _ref; i = 0 <= _ref ? ++_j : --_j) {
@@ -127,20 +136,20 @@
             }
             return _results;
             break;
-          case VariantMajor.MAP:
+          case CborMajor.MAP:
             len = this.getLen(typeInt);
             obj = {};
             for (i = _k = 0, _ref1 = len - 1; 0 <= _ref1 ? _k <= _ref1 : _k >= _ref1; i = 0 <= _ref1 ? ++_k : --_k) {
               obj[this.read()] = this.read();
             }
             return obj;
-          case VariantMajor.TAG:
+          case CborMajor.TAG:
             tag = this.getLen(typeInt);
             switch (tag) {
-              case VariantTag.TIME:
-              case VariantTag.DATETIME:
+              case CborTag.TIME:
+              case CborTag.DATETIME:
                 return new Date(this.read());
-              case VariantTag.UUID:
+              case CborTag.UUID:
                 return raw2Uuid(this.read());
               default:
                 throw "invalid tag in cbor protocol";
@@ -152,11 +161,11 @@
       };
 
       Message.prototype.sendSimple = function(type) {
-        return byteArrayFromArray([VariantMajor.SIMPLE << 5 | type]);
+        return byteArrayFromArray([CborMajor.SIMPLE << 5 | type]);
       };
 
       Message.prototype.sendTag = function(tag) {
-        return byteArrayFromArray([VariantMajor.TAG << 5 | tag]);
+        return byteArrayFromArray([CborMajor.TAG << 5 | tag]);
       };
 
       Message.prototype.sendLen = function(major, len) {
@@ -177,30 +186,46 @@
       };
 
       Message.prototype.sendImpl = function(obj) {
-        var ba;
+        var ba, bufs, key, keys, v, _j, _k, _len, _len1;
         switch (false) {
           case obj !== null:
-            return this.sendSimple(VariantSimple.NULL);
+            return this.sendSimple(CborSimple.NULL);
           case obj !== true:
-            return this.sendSimple(VariantSimple.TRUE);
+            return this.sendSimple(CborSimple.TRUE);
           case obj !== false:
-            return this.sendSimple(VariantSimple.FALSE);
+            return this.sendSimple(CborSimple.FALSE);
           case typeof obj !== "number":
             switch (false) {
               case !(obj >= 0 && obj < 0x100000000 && (obj % 1 === 0)):
-                return this.sendLen(VariantMajor.UINT, obj);
+                return this.sendLen(CborMajor.UINT, obj);
               case !(obj < 0 && obj >= -0x100000000 && (obj % 1 === 0)):
-                return this.sendLen(VariantMajor.NEGINT, -obj - 1);
+                return this.sendLen(CborMajor.NEGINT, -obj - 1);
               default:
                 ba = new ArrayBuffer(8);
                 new DataView(ba).setFloat64(0, obj);
-                return concatArrayBufs(this.sendSimple(VariantSimple.FLOAT64), ba);
+                return concatArrayBufs([this.sendSimple(CborSimple.FLOAT64), ba]);
             }
             break;
           case typeof obj !== "string":
-            return concatArrayBufs(this.sendLen(VariantMajor.TEXTSTRING, obj.length), byteArrayFromString(obj));
+            return concatArrayBufs([this.sendLen(CborMajor.TEXTSTRING, obj.length), byteArrayFromString(obj)]);
           case obj.constructor.name !== "ArrayBuffer":
-            return concatArrayBufs(this.sendLen(VariantMajor.BYTESTRING, obj.byteLength), obj);
+            return concatArrayBufs([this.sendLen(CborMajor.BYTESTRING, obj.byteLength), obj]);
+          case obj.constructor.name !== "Array":
+            bufs = [this.sendLen(CborMajor.ARRAY, obj.length)];
+            for (_j = 0, _len = obj.length; _j < _len; _j++) {
+              v = obj[_j];
+              bufs.push(this.sendImpl(v));
+            }
+            return concatArrayBufs(bufs);
+          case obj.constructor.name !== "Object":
+            keys = Object.keys(obj);
+            bufs = [this.sendLen(CborMajor.MAP, keys.length)];
+            for (_k = 0, _len1 = keys.length; _k < _len1; _k++) {
+              key = keys[_k];
+              bufs.push(this.sendImpl(key));
+              bufs.push(this.sendImpl(obj[key]));
+            }
+            return concatArrayBufs(bufs);
           default:
             throw "unsupported object in cbor protocol";
         }

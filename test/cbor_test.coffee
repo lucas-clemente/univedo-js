@@ -78,3 +78,8 @@ exports['cbor'] =
     t.deepEqual new univedo.Message().sendImpl("foobar"), "\x66foobar".b(), 'sends strings'
     # t.deepEqual new univedo.Message().sendImpl("föobar"), "\x66f\xc3\xb6obar".b(), 'sends utf8strings'
     t.done()
+
+  sendsCollections: (t) ->
+    t.deepEqual new univedo.Message().sendImpl(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'
+    t.deepEqual new univedo.Message().sendImpl({foo: 1, bar: 2}), "\xa2\x63foo\x01\x63bar\x02".b(), 'sends maps'
+    t.done()
