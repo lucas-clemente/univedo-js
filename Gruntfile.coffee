@@ -3,6 +3,9 @@ module.exports = (grunt) ->
     pkg: grunt.file.readJSON('package.json')
 
     concat:
+      options:
+        banner: '(function(exports) {\n'
+        footer: '})(typeof exports !== "undefined" && exports !== null ? exports : this);'
       dist:
         src: ['lib/univedo.js']
         dest: 'dist/univedo.js'
@@ -13,6 +16,8 @@ module.exports = (grunt) ->
         dest: 'dist/univedo.min.js'
 
     coffee:
+      options:
+        bare: true
       glob_to_multiple:
         expand: true
         cwd: 'src'
@@ -26,10 +31,7 @@ module.exports = (grunt) ->
     watch:
       src:
         files: ['src/**/*.coffee']
-        tasks: ['coffee']
-      lib:
-        files: ['lib/**/*.js']
-        tasks: ['nodeunit']
+        tasks: ['coffee', 'concat', 'nodeunit']
       test:
         files: ['test/**/*.coffee']
         tasks: ['nodeunit']
