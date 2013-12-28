@@ -1,4 +1,4 @@
-univedo = require('../lib/univedo.js')
+univedo = require('../dist/univedo.js')
 
 String.prototype.b = ->
   buf = new ArrayBuffer(@length)

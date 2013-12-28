@@ -7,7 +7,7 @@ module.exports = (grunt) ->
         banner: '(function(exports) {\n'
         footer: '})(typeof exports !== "undefined" && exports !== null ? exports : this);'
       dist:
-        src: ['lib/univedo.js']
+        src: ['lib/*.js']
         dest: 'dist/univedo.js'
 
     uglify:
@@ -42,4 +42,4 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-nodeunit'
   grunt.loadNpmTasks 'grunt-contrib-watch'
 
-  grunt.registerTask 'default', ['coffee', 'nodeunit', 'concat', 'uglify']
+  grunt.registerTask 'default', ['coffee', 'concat', 'nodeunit', 'uglify']
