@@ -1,5 +1,5 @@
 (function(exports) {
-var CborMajor, CborSimple, CborTag, Message, byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
+var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
 
 byteToHex = [];
 
@@ -45,6 +45,8 @@ concatArrayBufs = function(bufs) {
   }
   return tmp.buffer;
 };
+
+var CborMajor, CborSimple, CborTag, Message;
 
 CborMajor = {
   UINT: 0,
@@ -106,7 +108,7 @@ exports.Message = Message = (function() {
   };
 
   Message.prototype.read = function() {
-    var len, major, obj, tag, typeInt, _j, _k, _ref, _ref1, _results;
+    var i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
     typeInt = this.getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -139,7 +141,7 @@ exports.Message = Message = (function() {
       case CborMajor.ARRAY:
         len = this.getLen(typeInt);
         _results = [];
-        for (i = _j = 0, _ref = len - 1; 0 <= _ref ? _j <= _ref : _j >= _ref; i = 0 <= _ref ? ++_j : --_j) {
+        for (i = _i = 0, _ref = len - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
           _results.push(this.read());
         }
         return _results;
@@ -147,7 +149,7 @@ exports.Message = Message = (function() {
       case CborMajor.MAP:
         len = this.getLen(typeInt);
         obj = {};
-        for (i = _k = 0, _ref1 = len - 1; 0 <= _ref1 ? _k <= _ref1 : _k >= _ref1; i = 0 <= _ref1 ? ++_k : --_k) {
+        for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
           obj[this.read()] = this.read();
         }
         return obj;
@@ -195,7 +197,7 @@ exports.Message = Message = (function() {
   };
 
   Message.prototype.sendImpl = function(obj) {
-    var ba, bufs, key, keys, v, _j, _k, _len, _len1;
+    var ba, bufs, key, keys, v, _i, _j, _len, _len1;
     switch (false) {
       case obj !== null:
         return this.sendSimple(CborSimple.NULL);
@@ -221,16 +223,16 @@ exports.Message = Message = (function() {
         return concatArrayBufs([this.sendLen(CborMajor.BYTESTRING, obj.byteLength), obj]);
       case obj.constructor.name !== "Array":
         bufs = [this.sendLen(CborMajor.ARRAY, obj.length)];
-        for (_j = 0, _len = obj.length; _j < _len; _j++) {
-          v = obj[_j];
+        for (_i = 0, _len = obj.length; _i < _len; _i++) {
+          v = obj[_i];
           bufs.push(this.sendImpl(v));
         }
         return concatArrayBufs(bufs);
       case obj.constructor.name !== "Object":
         keys = Object.keys(obj);
         bufs = [this.sendLen(CborMajor.MAP, keys.length)];
-        for (_k = 0, _len1 = keys.length; _k < _len1; _k++) {
-          key = keys[_k];
+        for (_j = 0, _len1 = keys.length; _j < _len1; _j++) {
+          key = keys[_j];
           bufs.push(this.sendImpl(key));
           bufs.push(this.sendImpl(obj[key]));
         }
