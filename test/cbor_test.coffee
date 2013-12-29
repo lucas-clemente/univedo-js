@@ -88,3 +88,10 @@ exports['cbor'] =
   sendsTimes: (t) ->
     t.deepEqual new univedo.Message().sendImpl(new Date("2013-03-21T20:04:00Z")), "\xc0\x78\x18\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30.000\x5a".b(), 'sends datetimes'
     t.done()
+
+  sendsMultiple: (t) ->
+    m = new univedo.Message()
+    m.send("foobar")
+    m.send(42)
+    t.deepEqual m.sendBuffer, "\x66foobar\x18\x2a".b(), "sends multiple values"
+    t.done()

@@ -1,10 +1,11 @@
-# UUID conversion raw <=> string
+# Used in UUID conversion raw <=> string
 byteToHex = []
 hexToByte = {}
 for i in [0..255]
   byteToHex[i] = (i + 0x100).toString(16).substr(1)
   hexToByte[byteToHex[i]] = i
 
+# ArrayBuffer raw uuid -> UUID as string
 raw2Uuid = (buf) ->
   i = 0
   byteToHex[buf[i++]] + byteToHex[buf[i++]] +
@@ -28,6 +29,7 @@ byteArrayFromString = (s) ->
 byteArrayFromArray = (arr) ->
   byteArrayFromString(String.fromCharCode.apply(null, arr))
 
+# Concatenate any number of ArrayBuffers
 concatArrayBufs = (bufs) ->
   totalLength = 0
   totalLength += b.byteLength for b in bufs

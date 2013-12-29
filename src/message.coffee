@@ -1,9 +1,3 @@
-# univedo
-# https://github.com/lucas-clemente/univedo-js
-#
-# Copyright (c) 2013 Lucas Clemente
-# Licensed under the MIT license.
-
 CborMajor =
   UINT: 0
   NEGINT: 1
@@ -30,15 +24,16 @@ CborSimple =
   FLOAT64: 27
 
 exports.Message = class Message
-  constructor: (@buffer) ->
-    @offset = 0
+  constructor: (@recvBuffer) ->
+    @recvOffset = 0
+    @sendBuffer = new ArrayBuffer(0)
 
 
   # Receiving
 
   getDataView: (len) ->
-    dv = new DataView(@buffer, @offset, len)
-    @offset += len
+    dv = new DataView(@recvBuffer, @recvOffset, len)
+    @recvOffset += len
     dv
 
   getLen: (typeInt) ->
@@ -72,11 +67,11 @@ exports.Message = class Message
           else throw "invalid simple in cbor protocol"
       when CborMajor.BYTESTRING
         len = @getLen(typeInt)
-        @buffer.slice(@offset, @offset += len)
+        @recvBuffer.slice(@recvOffset, @recvOffset += len)
       when CborMajor.TEXTSTRING
         len = @getLen(typeInt)
         # TODO doesn't work for non-ascii, see test
-        String.fromCharCode.apply(null, new Uint8Array(@buffer.slice(@offset, @offset += len)))
+        String.fromCharCode.apply(null, new Uint8Array(@recvBuffer.slice(@recvOffset, @recvOffset += len)))
       when CborMajor.ARRAY
         len = @getLen(typeInt)
         @read() for i in [0..len-1]
@@ -98,6 +93,9 @@ exports.Message = class Message
 
 
   # Sending
+
+  send: (obj) ->
+    @sendBuffer = concatArrayBufs([@sendBuffer, @sendImpl(obj)])
 
   sendSimple: (type) ->
     byteArrayFromArray([CborMajor.SIMPLE << 5 | type])
