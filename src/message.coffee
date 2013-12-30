@@ -14,7 +14,7 @@ CborTag =
   DECIMAL: 4
   REMOTEOBJECT: 6
   UUID: 7
-  SQL: 10
+  RECORD: 8
 
 CborSimple =
   FALSE: 20
@@ -88,6 +88,7 @@ exports.Message = class Message
           when CborTag.TIME then new Date(@read())
           when CborTag.UUID
             raw2Uuid(@read())
+          when CborTag.RECORD then @read()
           else throw "invalid tag in cbor protocol"
       else throw "invalid major in cbor protocol"
 

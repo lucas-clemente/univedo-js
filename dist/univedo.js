@@ -65,7 +65,7 @@ CborTag = {
   DECIMAL: 4,
   REMOTEOBJECT: 6,
   UUID: 7,
-  SQL: 10
+  RECORD: 8
 };
 
 CborSimple = {
@@ -163,6 +163,8 @@ exports.Message = Message = (function() {
             return new Date(this.read());
           case CborTag.UUID:
             return raw2Uuid(this.read());
+          case CborTag.RECORD:
+            return this.read();
           default:
             throw "invalid tag in cbor protocol";
         }

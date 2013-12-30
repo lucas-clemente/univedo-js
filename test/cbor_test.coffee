@@ -52,6 +52,10 @@ exports['cbor'] =
     t.equal new univedo.Message("\xc7\x50\x68\x4E\xF8\x95\x72\xA2\x42\x98\xBC\x5B\x58\x0F\x1C\x1D\x27\x07".b()).read(), "684ef895-72a2-4298-bc5b-580f1c1d2707", 'reads uuids'
     t.done()
 
+  readsRecords: (t) ->
+    t.equal new univedo.Message("\xc8\x18\x2a".b()).read(), 42, 'reads record'
+    t.done()
+
   sendsSimple: (t) ->
     t.deepEqual new univedo.Message().sendImpl(null), "\xf6".b(), 'sends null'
     t.deepEqual new univedo.Message().sendImpl(true), "\xf5".b(), 'sends true'
