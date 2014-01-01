@@ -8,14 +8,17 @@ exports.Connection = class Connection
     @socket.onerror = @onerror
     @socket.onclose = @onclose
 
+  close: ->
+    @socket.close()
+
   onopen: (e) ->
     console.log "open"
 
   onmessage: (e) ->
-    console.log e
+    console.log "message"
 
   onclose: (e) ->
-    console.log e
+    console.log "close"
 
   onerror: (e) ->
-    console.log e
+    console.log "error"

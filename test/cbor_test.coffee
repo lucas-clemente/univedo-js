@@ -7,9 +7,6 @@ String.prototype.b = ->
     bufView[i] = @charCodeAt(i)
   buf
 
-setUp: (done) ->
-  done()
-
 exports['cbor'] =
 
   readsSimple: (t) ->

@@ -15,20 +15,24 @@ exports.Connection = Connection = (function() {
     this.socket.onclose = this.onclose;
   }
 
+  Connection.prototype.close = function() {
+    return this.socket.close();
+  };
+
   Connection.prototype.onopen = function(e) {
     return console.log("open");
   };
 
   Connection.prototype.onmessage = function(e) {
-    return console.log(e);
+    return console.log("message");
   };
 
   Connection.prototype.onclose = function(e) {
-    return console.log(e);
+    return console.log("close");
   };
 
   Connection.prototype.onerror = function(e) {
-    return console.log(e);
+    return console.log("error");
   };
 
   return Connection;
@@ -288,6 +292,58 @@ exports.Message = Message = (function() {
   };
 
   return Message;
+
+})();
+
+var ROMOPS, RemoteObject;
+
+ROMOPS = {
+  CALL: 1,
+  ANSWER: 2,
+  NOTIFY: 3,
+  DELETE: 4
+};
+
+exports.RemoteObject = RemoteObject = (function() {
+  function RemoteObject(connection, id) {
+    this.connection = connection;
+    this.id = id;
+    this.call_id = 0;
+    this.calls = [];
+  }
+
+  RemoteObject.prototype.callRom = function(name, args, onreturn) {
+    var call;
+    this.connection.stream.sendMessage([this.id, ROMOPS.CALL, this.call_id, name].concat(args));
+    call = {
+      id: this.call_id,
+      onreturn: onreturn
+    };
+    this.calls.push(call);
+    return this.call_id += 1;
+  };
+
+  RemoteObject.prototype.receive = function(message) {
+    var call_id, callback, opcode, result, status;
+    opcode = message.read();
+    switch (opcode) {
+      case ROMOPS.ANSWER:
+        call_id = message.read();
+        status = message.read();
+        switch (status) {
+          case 0:
+            result = message.read();
+            callback = this.calls[call_id].onreturn;
+            this.calls.splice(call_id, 1);
+            return callback(result);
+        }
+        break;
+      default:
+        throw "unknown romop";
+    }
+  };
+
+  return RemoteObject;
 
 })();
 })(typeof exports !== "undefined" && exports !== null ? exports : this);

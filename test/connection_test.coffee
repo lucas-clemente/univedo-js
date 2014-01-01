@@ -1,10 +1,14 @@
 univedo = require('../dist/univedo.js')
 
-setUp: (done) ->
-  done()
-
 exports['connection'] =
   connectsWebsocket: (t) ->
-    c = new univedo.Connection("ws://echo.websocket.org")
-    c.socket.onopen = ->
+    t.expect(2)
+    c = new univedo.Connection("ws://localhost:9011")
+    c.socket.onopen = (e) ->
+      c.onopen(e)
+      c.close()
+      t.ok(true)
+    c.socket.onclose = (e) ->
+      c.onclose(e)
+      t.ok(true)
       t.done()
