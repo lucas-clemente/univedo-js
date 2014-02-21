@@ -152,7 +152,7 @@ exports.Message = Message = (function() {
     }
   };
 
-  Message.prototype.read = function() {
+  Message.prototype.shift = function() {
     var arr, i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
     typeInt = this.getDataView(1).getUint8(0);
     major = typeInt >> 5;
@@ -188,7 +188,7 @@ exports.Message = Message = (function() {
         len = this.getLen(typeInt);
         _results = [];
         for (i = _i = 0, _ref = len - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-          _results.push(this.read());
+          _results.push(this.shift());
         }
         return _results;
         break;
@@ -196,20 +196,20 @@ exports.Message = Message = (function() {
         len = this.getLen(typeInt);
         obj = {};
         for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
-          obj[this.read()] = this.read();
+          obj[this.shift()] = this.shift();
         }
         return obj;
       case CborMajor.TAG:
         tag = this.getLen(typeInt);
         switch (tag) {
           case CborTag.DATETIME:
-            return new Date(this.read());
+            return new Date(this.shift());
           case CborTag.TIME:
-            return new Date(this.read());
+            return new Date(this.shift());
           case CborTag.UUID:
-            return raw2Uuid(this.read());
+            return raw2Uuid(this.shift());
           case CborTag.RECORD:
-            return this.read();
+            return this.shift();
           default:
             throw Error("invalid tag in cbor protocol");
         }
@@ -315,6 +315,7 @@ exports.RemoteObject = RemoteObject = (function() {
     this.id = id;
     this.call_id = 0;
     this.calls = [];
+    this.notification_listeners = [];
   }
 
   RemoteObject.prototype.callRom = function(name, args, onreturn) {
@@ -329,23 +330,35 @@ exports.RemoteObject = RemoteObject = (function() {
   };
 
   RemoteObject.prototype.receive = function(message) {
-    var call_id, callback, opcode, result, status;
-    opcode = message.read();
+    var args, call, call_id, listener, name, opcode, result, status;
+    opcode = message.shift();
     switch (opcode) {
       case ROMOPS.ANSWER:
-        call_id = message.read();
-        status = message.read();
+        call_id = message.shift();
+        status = message.shift();
         switch (status) {
           case 0:
-            result = message.read();
-            callback = this.calls[call_id].onreturn;
-            this.calls.splice(call_id, 1);
-            return callback(result);
+            result = message.shift();
+            call = this.calls.splice(call_id, 1)[0];
+            return call.onreturn(result);
+        }
+        break;
+      case ROMOPS.NOTIFY:
+        name = message.shift();
+        args = message.shift();
+        if (listener = this.notification_listeners[name]) {
+          return listener.apply(this, args);
+        } else {
+          throw Error("unhandled notification " + name);
         }
         break;
       default:
         throw Error("unknown romop");
     }
+  };
+
+  RemoteObject.prototype.on = function(name, callback) {
+    return this.notification_listeners[name] = callback;
   };
 
   return RemoteObject;

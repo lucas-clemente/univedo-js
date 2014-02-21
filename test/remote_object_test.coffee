@@ -12,11 +12,6 @@ describe 'remote object', ->
       stream:
         sendMessage: (m) =>
           @sentMessage(m)
-    t = this
-    @mock_message =
-      i: -1
-      read: ->
-        t.message[@i += 1]
 
   it 'calls roms', ->
     @sentMessage = (m) ->
@@ -30,7 +25,13 @@ describe 'remote object', ->
     c = {stream: sendMessage: ->}
     ro = new univedo.RemoteObject(c, 2)
     ro.callRom "foo", [], (ret) ->
-      assert.equal(ret, 42)
+      assert.deepEqual(ret, 42)
       done()
-    @message = [2, 0, 0, 42]
-    ro.receive(@mock_message)
+    ro.receive([2, 0, 0, 42])
+
+  it 'receives notifications', (done) ->
+    c = {stream: sendMessage: ->}
+    ro = new univedo.RemoteObject(c, 2)
+    ro.on 'foo', ->
+      done()
+    ro.receive([3, 'foo', [42]])

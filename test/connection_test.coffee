@@ -6,7 +6,7 @@ univedo = requirejs('dist/univedo.js')
 assert = require 'assert'
 
 describe 'Connection', ->
-  it 'should connect to univedo', (done) ->
+  it 'connects to univedo', (done) ->
     c = new univedo.Connection("ws://localhost:9011")
     c.socket.onopen = (e) ->
       c.onopen(e)

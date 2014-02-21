@@ -50,7 +50,7 @@ exports.Message = class Message
       else
         smallLen
 
-  read: ->
+  shift: ->
     typeInt = @getDataView(1).getUint8(0)
     major = typeInt >> 5
 
@@ -75,21 +75,21 @@ exports.Message = class Message
         String.fromCharCode.apply(null, arr)
       when CborMajor.ARRAY
         len = @getLen(typeInt)
-        @read() for i in [0..len-1]
+        @shift() for i in [0..len-1]
       when CborMajor.MAP
         len = @getLen(typeInt)
         obj = {}
         for i in [0..len-1]
-          obj[@read()] = @read()
+          obj[@shift()] = @shift()
         obj
       when CborMajor.TAG
         tag = @getLen(typeInt)
         switch tag
-          when CborTag.DATETIME then new Date(@read())
-          when CborTag.TIME then new Date(@read())
+          when CborTag.DATETIME then new Date(@shift())
+          when CborTag.TIME then new Date(@shift())
           when CborTag.UUID
-            raw2Uuid(@read())
-          when CborTag.RECORD then @read()
+            raw2Uuid(@shift())
+          when CborTag.RECORD then @shift()
           else throw Error "invalid tag in cbor protocol"
       else throw Error "invalid major in cbor protocol"
 

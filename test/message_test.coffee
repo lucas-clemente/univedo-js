@@ -14,40 +14,40 @@ String.prototype.b = ->
 
 describe 'cbor', ->
   it 'reads simple', ->
-    assert.equal new univedo.Message("\xf6".b()).read(), null, 'reads null'
-    assert.equal new univedo.Message("\xf5".b()).read(), true, 'reads true'
-    assert.equal new univedo.Message("\xf4".b()).read(), false, 'reads false'
+    assert.equal new univedo.Message("\xf6".b()).shift(), null, 'reads null'
+    assert.equal new univedo.Message("\xf5".b()).shift(), true, 'reads true'
+    assert.equal new univedo.Message("\xf4".b()).shift(), false, 'reads false'
 
   it 'reads integers', ->
-    assert.equal new univedo.Message("\x18\x2a".b()).read(), 42, 'reads uint'
-    assert.equal new univedo.Message("\x18\x64".b()).read(), 100, 'reads uint'
-    assert.equal new univedo.Message("\x1a\x00\x0f\x42\x40".b()).read(), 1000000, 'reads uint'
-    assert.equal new univedo.Message("\x20".b()).read(), -1, 'reads nint'
-    assert.equal new univedo.Message("\x38\x63".b()).read(), -100, 'reads nint'
-    assert.equal new univedo.Message("\x39\x03\xe7".b()).read(), -1000, 'reads nint'
+    assert.equal new univedo.Message("\x18\x2a".b()).shift(), 42, 'reads uint'
+    assert.equal new univedo.Message("\x18\x64".b()).shift(), 100, 'reads uint'
+    assert.equal new univedo.Message("\x1a\x00\x0f\x42\x40".b()).shift(), 1000000, 'reads uint'
+    assert.equal new univedo.Message("\x20".b()).shift(), -1, 'reads nint'
+    assert.equal new univedo.Message("\x38\x63".b()).shift(), -100, 'reads nint'
+    assert.equal new univedo.Message("\x39\x03\xe7".b()).shift(), -1000, 'reads nint'
 
   it 'reads floats', ->
-    assert.equal new univedo.Message("\xfa\x47\xc3\x50\x00".b()).read(), 100000.0, 'reads floats'
-    assert.equal new univedo.Message("\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b()).read(), 1.1, 'reads floats'
+    assert.equal new univedo.Message("\xfa\x47\xc3\x50\x00".b()).shift(), 100000.0, 'reads floats'
+    assert.equal new univedo.Message("\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b()).shift(), 1.1, 'reads floats'
 
   it 'reads strings', ->
-    assert.deepEqual new univedo.Message("\x46foobar".b()).read(), "foobar".b(), 'reads blobs'
-    assert.equal new univedo.Message("\x66foobar".b()).read(), "foobar", 'reads strings'
-    # assert.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).read(), "föobar", 'reads utf8strings'
+    assert.deepEqual new univedo.Message("\x46foobar".b()).shift(), "foobar".b(), 'reads blobs'
+    assert.equal new univedo.Message("\x66foobar".b()).shift(), "foobar", 'reads strings'
+    # assert.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).shift(), "föobar", 'reads utf8strings'
 
   it 'reads collections', ->
-    assert.deepEqual new univedo.Message("\x82\x63foo\x63bar".b()).read(), ["foo", "bar"], 'reads arrays'
-    assert.deepEqual new univedo.Message("\xa2\x63bar\x02\x63foo\x01".b()).read(), {foo: 1, bar: 2}, 'reads maps'
+    assert.deepEqual new univedo.Message("\x82\x63foo\x63bar".b()).shift(), ["foo", "bar"], 'reads arrays'
+    assert.deepEqual new univedo.Message("\xa2\x63bar\x02\x63foo\x01".b()).shift(), {foo: 1, bar: 2}, 'reads maps'
 
   it 'reads times', ->
-    assert.deepEqual new univedo.Message("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a".b()).read(), new Date("2013-03-21T20:04:00Z"), 'reads datetimes'
-    assert.deepEqual new univedo.Message("\xc1\x1a\x51\x4b\x67\xb0".b()).read(), new Date(1363896240), 'reads times'
+    assert.deepEqual new univedo.Message("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a".b()).shift(), new Date("2013-03-21T20:04:00Z"), 'reads datetimes'
+    assert.deepEqual new univedo.Message("\xc1\x1a\x51\x4b\x67\xb0".b()).shift(), new Date(1363896240), 'reads times'
 
   it 'reads uuids', ->
-    assert.equal new univedo.Message("\xc7\x50\x68\x4E\xF8\x95\x72\xA2\x42\x98\xBC\x5B\x58\x0F\x1C\x1D\x27\x07".b()).read(), "684ef895-72a2-4298-bc5b-580f1c1d2707", 'reads uuids'
+    assert.equal new univedo.Message("\xc7\x50\x68\x4E\xF8\x95\x72\xA2\x42\x98\xBC\x5B\x58\x0F\x1C\x1D\x27\x07".b()).shift(), "684ef895-72a2-4298-bc5b-580f1c1d2707", 'reads uuids'
 
   it 'reads records', ->
-    assert.equal new univedo.Message("\xc8\x18\x2a".b()).read(), 42, 'reads record'
+    assert.equal new univedo.Message("\xc8\x18\x2a".b()).shift(), 42, 'reads record'
 
   it 'sends simple', ->
     assert.deepEqual new univedo.Message().sendImpl(null), "\xf6".b(), 'sends null'
