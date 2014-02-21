@@ -26,9 +26,11 @@ describe 'remote object', ->
     assert.deepEqual ro.calls, [{id: 0, onreturn: undefined}]
     assert.equal ro.call_id, 1
 
-  it 'returns from roms', ->
+  it 'returns from roms', (done) ->
     c = {stream: sendMessage: ->}
     ro = new univedo.RemoteObject(c, 2)
-    ro.callRom("foo", [], (ret) -> assert.equal(ret, 42))
+    ro.callRom "foo", [], (ret) ->
+      assert.equal(ret, 42)
+      done()
     @message = [2, 0, 0, 42]
     ro.receive(@mock_message)

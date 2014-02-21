@@ -1,9 +1,12 @@
+/**
+ * univedo - Univedo client for javascript
+ * @version v0.1.0
+ * @link https://github.com/lucas-clemente/univedo-js
+ * @license MIT
+ */
 define(["ws"],function(ws){
 
-var exports;
-
-exports = {};
-
+var exports = {};
 var Connection;
 
 exports.Connection = Connection = (function() {

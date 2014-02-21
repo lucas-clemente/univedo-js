@@ -9,11 +9,23 @@ var coffeelint = require('gulp-coffeelint');
 var mocha = require('gulp-mocha');
 var gzip = require('gulp-gzip');
 var size = require('gulp-size');
+var header = require('gulp-header');
 
 var paths = {
   scripts: 'src/*.coffee',
   tests: 'test/*.coffee'
 };
+
+var pkg = require('./package.json');
+var banner = [
+  '/**',
+  ' * <%= pkg.name %> - <%= pkg.description %>',
+  ' * @version v<%= pkg.version %>',
+  ' * @link <%= pkg.homepage %>',
+  ' * @license <%= pkg.license %>',
+  ' */',
+  ''
+].join('\n');
 
 gulp.task('lint', function () {
   gulp.src(paths.scripts)
@@ -25,17 +37,20 @@ gulp.task('src', ['lint'], function () {
   gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
+    .pipe(header('var exports = {};\n'))
     .pipe(wrap({
       deps: ["ws"],
       params: ["ws"],
       exports: 'exports'
     }))
+    .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('uglify', ['test'], function () {
   gulp.src('dist/univedo.js')
   .pipe(uglify())
+  .pipe(header(banner, {pkg: pkg}))
   .pipe(rename('univedo.min.js'))
   .pipe(size())
   .pipe(gulp.dest('dist/'))
