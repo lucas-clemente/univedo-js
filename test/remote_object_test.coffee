@@ -1,7 +1,12 @@
-univedo = require('../dist/univedo.js')
+requirejs = require 'requirejs'
+requirejs.config
+  nodeRequire: require
 
-exports['remote object'] =
-  setUp: (done) ->
+univedo = requirejs('dist/univedo.js')
+assert = require 'assert'
+
+describe 'remote object', ->
+  beforeEach ->
     @sentMessage = ->
     @connection =
       stream:
@@ -12,23 +17,18 @@ exports['remote object'] =
       i: -1
       read: ->
         t.message[@i += 1]
-    done()
 
-  callsRom: (t) ->
-    t.expect(3)
+  it 'calls roms', ->
     @sentMessage = (m) ->
-      t.deepEqual m, [2, 1, 0, 'foo']
+      assert.deepEqual m, [2, 1, 0, 'foo']
     ro = new univedo.RemoteObject(@connection, 2)
     ro.callRom("foo", [])
-    t.deepEqual ro.calls, [{id: 0, onreturn: undefined}]
-    t.equal ro.call_id, 1
-    t.done()
+    assert.deepEqual ro.calls, [{id: 0, onreturn: undefined}]
+    assert.equal ro.call_id, 1
 
-  romReturns: (t) ->
-    t.expect(1)
+  it 'returns from roms', ->
     c = {stream: sendMessage: ->}
     ro = new univedo.RemoteObject(c, 2)
-    ro.callRom("foo", [], (ret) -> t.equal(ret, 42))
+    ro.callRom("foo", [], (ret) -> assert.equal(ret, 42))
     @message = [2, 0, 0, 42]
     ro.receive(@mock_message)
-    t.done()

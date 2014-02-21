@@ -1,14 +1,15 @@
-(function(exports) {
-var Connection;
+define(["ws"],function(ws){
 
-if (typeof WebSocket === "undefined" || WebSocket === null) {
-  exports.WebSocket = require("ws");
-}
+var exports;
+
+exports = {};
+
+var Connection;
 
 exports.Connection = Connection = (function() {
   function Connection(url) {
     this.url = url;
-    this.socket = new exports.WebSocket(this.url);
+    this.socket = new ws(this.url);
     this.socket.onopen = this.onopen;
     this.socket.onmessage = this.onmessage;
     this.socket.onerror = this.onerror;
@@ -346,4 +347,7 @@ exports.RemoteObject = RemoteObject = (function() {
   return RemoteObject;
 
 })();
-})(typeof exports !== "undefined" && exports !== null ? exports : this);
+
+return exports;
+
+});

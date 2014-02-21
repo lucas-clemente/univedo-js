@@ -1,8 +1,6 @@
-exports.WebSocket = require("ws") unless WebSocket?
-
 exports.Connection = class Connection
   constructor: (@url) ->
-    @socket = new exports.WebSocket(@url)
+    @socket = new ws(@url)
     @socket.onopen = @onopen
     @socket.onmessage = @onmessage
     @socket.onerror = @onerror

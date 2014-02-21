@@ -1,14 +1,16 @@
-univedo = require('../dist/univedo.js')
+requirejs = require 'requirejs'
+requirejs.config
+  nodeRequire: require
 
-exports['connection'] =
-  connectsWebsocket: (t) ->
-    t.expect(2)
+univedo = requirejs('dist/univedo.js')
+assert = require 'assert'
+
+describe 'Connection', ->
+  it 'should connect to univedo', (done) ->
     c = new univedo.Connection("ws://localhost:9011")
     c.socket.onopen = (e) ->
       c.onopen(e)
       c.close()
-      t.ok(true)
     c.socket.onclose = (e) ->
       c.onclose(e)
-      t.ok(true)
-      t.done()
+      done()
