@@ -7,6 +7,8 @@ var rename = require('gulp-rename');
 var wrap = require('gulp-wrap-amd');
 var coffeelint = require('gulp-coffeelint');
 var mocha = require('gulp-mocha');
+var gzip = require('gulp-gzip');
+var size = require('gulp-size');
 
 var paths = {
   scripts: 'src/*.coffee',
@@ -16,7 +18,7 @@ var paths = {
 gulp.task('lint', function () {
   gulp.src(paths.scripts)
     .pipe(coffeelint())
-    .pipe(coffeelint.reporter())
+    .pipe(coffeelint.reporter());
 });
 
 gulp.task('src', ['lint'], function () {
@@ -31,18 +33,23 @@ gulp.task('src', ['lint'], function () {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify', ['src'], function () {
+gulp.task('uglify', ['test'], function () {
   gulp.src('dist/univedo.js')
   .pipe(uglify())
   .pipe(rename('univedo.min.js'))
-  .pipe(gulp.dest('dist/'));
+  .pipe(size())
+  .pipe(gulp.dest('dist/'))
+  .pipe(gzip())
+  .pipe(rename('univedo.min.js.gz'))
+  .pipe(size())
+  .pipe(gulp.dest('dist/'))
 });
 
 function test() {
   return gulp.src(paths.tests)
     .pipe(mocha({
-      reporter: 'spec'
-    }));
+      reporter: 'spec'}
+    ));
 }
 
 gulp.task('test', ['src'], function () {
@@ -59,4 +66,4 @@ gulp.task('watch', function () {
   gulp.watch([paths.scripts, paths.tests], ['test-no-crash']);
 });
 
-gulp.task('default', ['test', 'uglify']);
+gulp.task('default', ['uglify']);
