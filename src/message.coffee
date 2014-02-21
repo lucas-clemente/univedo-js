@@ -46,7 +46,7 @@ exports.Message = class Message
       when 26
         @getDataView(4).getUint32(0)
       when 27
-        throw "int64 not yet supported in javascript!"
+        throw Error "int64 not yet supported in javascript!"
       else
         smallLen
 
@@ -64,14 +64,15 @@ exports.Message = class Message
           when CborSimple.NULL then null
           when CborSimple.FLOAT32 then @getDataView(4).getFloat32(0)
           when CborSimple.FLOAT64 then @getDataView(8).getFloat64(0)
-          else throw "invalid simple in cbor protocol"
+          else throw Error "invalid simple in cbor protocol"
       when CborMajor.BYTESTRING
         len = @getLen(typeInt)
         @recvBuffer.slice(@recvOffset, @recvOffset += len)
       when CborMajor.TEXTSTRING
         len = @getLen(typeInt)
         # TODO doesn't work for non-ascii, see test
-        String.fromCharCode.apply(null, new Uint8Array(@recvBuffer.slice(@recvOffset, @recvOffset += len)))
+        arr = new Uint8Array(@recvBuffer.slice(@recvOffset, @recvOffset += len))
+        String.fromCharCode.apply(null, arr)
       when CborMajor.ARRAY
         len = @getLen(typeInt)
         @read() for i in [0..len-1]
@@ -89,8 +90,8 @@ exports.Message = class Message
           when CborTag.UUID
             raw2Uuid(@read())
           when CborTag.RECORD then @read()
-          else throw "invalid tag in cbor protocol"
-      else throw "invalid major in cbor protocol"
+          else throw Error "invalid tag in cbor protocol"
+      else throw Error "invalid major in cbor protocol"
 
 
   # Sending
@@ -114,8 +115,10 @@ exports.Message = class Message
       when len < 0x10000
         byteArrayFromArray([typeInt | 25, len >> 8, len & 0xff])
       when len < 0x100000000
-        byteArrayFromArray([typeInt | 26, len >> 24, len >> 16, len >> 8, len & 0xff])
-      else throw "sendLen() called with non-uint"
+        byteArrayFromArray([
+          typeInt | 26, len >> 24, len >> 16, len >> 8, len & 0xff
+        ])
+      else throw Error "sendLen() called with non-uint"
 
   sendImpl: (obj) ->
     switch
@@ -124,8 +127,10 @@ exports.Message = class Message
       when obj == false then @sendSimple(CborSimple.FALSE)
       when typeof obj == "number"
         switch
-          when obj >= 0 && obj < 0x100000000 && (obj % 1 == 0) then @sendLen(CborMajor.UINT, obj)
-          when obj < 0 && obj >= -0x100000000 && (obj % 1 == 0) then @sendLen(CborMajor.NEGINT, -obj-1)
+          when obj >= 0 && obj < 0x100000000 && (obj % 1 == 0)
+            @sendLen(CborMajor.UINT, obj)
+          when obj < 0 && obj >= -0x100000000 && (obj % 1 == 0)
+            @sendLen(CborMajor.NEGINT, -obj-1)
           else
             ba = new ArrayBuffer(8)
             new DataView(ba).setFloat64(0, obj)
@@ -151,12 +156,12 @@ exports.Message = class Message
         keys = Object.keys(obj)
         bufs = [@sendLen(CborMajor.MAP, keys.length)]
         for key in keys
-          bufs.push(@sendImpl(key)) 
-          bufs.push(@sendImpl(obj[key])) 
+          bufs.push(@sendImpl(key))
+          bufs.push(@sendImpl(obj[key]))
         concatArrayBufs(bufs)
       when obj.constructor.name == "Date"
         concatArrayBufs([
           @sendTag(CborTag.DATETIME),
           @sendImpl(obj.toISOString())
         ])
-      else throw "unsupported object in cbor protocol"
+      else throw Error "unsupported object in cbor protocol"

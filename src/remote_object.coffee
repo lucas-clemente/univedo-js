@@ -10,7 +10,9 @@ exports.RemoteObject = class RemoteObject
     @calls = []
 
   callRom: (name, args, onreturn) ->
-    @connection.stream.sendMessage([@id, ROMOPS.CALL, @call_id, name].concat(args))
+    @connection.stream.sendMessage([
+      @id, ROMOPS.CALL, @call_id, name
+    ].concat(args))
     call =
       id: @call_id
       onreturn: onreturn
@@ -29,4 +31,4 @@ exports.RemoteObject = class RemoteObject
             callback = @calls[call_id].onreturn
             @calls.splice(call_id, 1)
             callback(result)
-      else throw "unknown romop"
+      else throw Error "unknown romop"

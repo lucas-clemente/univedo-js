@@ -19,7 +19,7 @@ gulp.task('lint', function () {
     .pipe(coffeelint.reporter())
 });
 
-gulp.task('src', function () {
+gulp.task('src', ['lint'], function () {
   gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))

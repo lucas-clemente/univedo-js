@@ -142,7 +142,7 @@ exports.Message = Message = (function() {
       case 26:
         return this.getDataView(4).getUint32(0);
       case 27:
-        throw "int64 not yet supported in javascript!";
+        throw Error("int64 not yet supported in javascript!");
         break;
       default:
         return smallLen;
@@ -150,7 +150,7 @@ exports.Message = Message = (function() {
   };
 
   Message.prototype.read = function() {
-    var i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
+    var arr, i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
     typeInt = this.getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -171,7 +171,7 @@ exports.Message = Message = (function() {
           case CborSimple.FLOAT64:
             return this.getDataView(8).getFloat64(0);
           default:
-            throw "invalid simple in cbor protocol";
+            throw Error("invalid simple in cbor protocol");
         }
         break;
       case CborMajor.BYTESTRING:
@@ -179,7 +179,8 @@ exports.Message = Message = (function() {
         return this.recvBuffer.slice(this.recvOffset, this.recvOffset += len);
       case CborMajor.TEXTSTRING:
         len = this.getLen(typeInt);
-        return String.fromCharCode.apply(null, new Uint8Array(this.recvBuffer.slice(this.recvOffset, this.recvOffset += len)));
+        arr = new Uint8Array(this.recvBuffer.slice(this.recvOffset, this.recvOffset += len));
+        return String.fromCharCode.apply(null, arr);
       case CborMajor.ARRAY:
         len = this.getLen(typeInt);
         _results = [];
@@ -207,11 +208,11 @@ exports.Message = Message = (function() {
           case CborTag.RECORD:
             return this.read();
           default:
-            throw "invalid tag in cbor protocol";
+            throw Error("invalid tag in cbor protocol");
         }
         break;
       default:
-        throw "invalid major in cbor protocol";
+        throw Error("invalid major in cbor protocol");
     }
   };
 
@@ -240,7 +241,7 @@ exports.Message = Message = (function() {
       case !(len < 0x100000000):
         return byteArrayFromArray([typeInt | 26, len >> 24, len >> 16, len >> 8, len & 0xff]);
       default:
-        throw "sendLen() called with non-uint";
+        throw Error("sendLen() called with non-uint");
     }
   };
 
@@ -288,7 +289,7 @@ exports.Message = Message = (function() {
       case obj.constructor.name !== "Date":
         return concatArrayBufs([this.sendTag(CborTag.DATETIME), this.sendImpl(obj.toISOString())]);
       default:
-        throw "unsupported object in cbor protocol";
+        throw Error("unsupported object in cbor protocol");
     }
   };
 
@@ -340,7 +341,7 @@ exports.RemoteObject = RemoteObject = (function() {
         }
         break;
       default:
-        throw "unknown romop";
+        throw Error("unknown romop");
     }
   };
 
