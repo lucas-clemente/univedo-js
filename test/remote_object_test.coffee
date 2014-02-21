@@ -7,19 +7,23 @@ assert = require 'assert'
 
 describe 'remote object', ->
   beforeEach ->
-    @sentMessage = ->
+    @sent_messages = []
     @connection =
       stream:
         sendMessage: (m) =>
-          @sentMessage(m)
+          @sent_messages.push(m)
 
   it 'calls roms', ->
-    @sentMessage = (m) ->
-      assert.deepEqual m, [2, 1, 0, 'foo']
     ro = new univedo.RemoteObject(@connection, 2)
-    ro.callRom("foo", [])
+    ro.callRom("foo", [1, 2, 3])
     assert.deepEqual ro.calls, [{id: 0, onreturn: undefined}]
     assert.equal ro.call_id, 1
+    assert.deepEqual @sent_messages, [[2, 1, 0, 'foo', [1, 2, 3]]]
+
+  it 'sends notifications', ->
+    ro = new univedo.RemoteObject(@connection, 2)
+    ro.sendNotification("foo", [1, 2, 3])
+    assert.deepEqual @sent_messages, [[2, 3, 'foo', [1, 2, 3]]]
 
   it 'returns from roms', (done) ->
     c = {stream: sendMessage: ->}

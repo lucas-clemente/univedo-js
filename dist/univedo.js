@@ -320,13 +320,17 @@ exports.RemoteObject = RemoteObject = (function() {
 
   RemoteObject.prototype.callRom = function(name, args, onreturn) {
     var call;
-    this.connection.stream.sendMessage([this.id, ROMOPS.CALL, this.call_id, name].concat(args));
+    this.connection.stream.sendMessage([this.id, ROMOPS.CALL, this.call_id, name, args]);
     call = {
       id: this.call_id,
       onreturn: onreturn
     };
     this.calls.push(call);
     return this.call_id += 1;
+  };
+
+  RemoteObject.prototype.sendNotification = function(name, args) {
+    return this.connection.stream.sendMessage([this.id, ROMOPS.NOTIFY, name, args]);
   };
 
   RemoteObject.prototype.receive = function(message) {
