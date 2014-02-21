@@ -50,35 +50,35 @@ describe 'cbor', ->
     assert.equal new univedo.Message("\xc8\x18\x2a".b()).shift(), 42, 'reads record'
 
   it 'sends simple', ->
-    assert.deepEqual new univedo.Message().sendImpl(null), "\xf6".b(), 'sends null'
-    assert.deepEqual new univedo.Message().sendImpl(true), "\xf5".b(), 'sends true'
-    assert.deepEqual new univedo.Message().sendImpl(false), "\xf4".b(), 'sends false'
+    assert.deepEqual new univedo.Message().send(null), "\xf6".b(), 'sends null'
+    assert.deepEqual new univedo.Message().send(true), "\xf5".b(), 'sends true'
+    assert.deepEqual new univedo.Message().send(false), "\xf4".b(), 'sends false'
 
   it 'sends integers', ->
-    assert.deepEqual new univedo.Message().sendImpl(1), "\x01".b(), 'sends uint'
-    assert.deepEqual new univedo.Message().sendImpl(42), "\x18\x2a".b(), 'sends uint'
-    assert.deepEqual new univedo.Message().sendImpl(100), "\x18\x64".b(), 'sends uint'
-    assert.deepEqual new univedo.Message().sendImpl(1000000), "\x1a\x00\x0f\x42\x40".b(), 'sends uint'
-    assert.deepEqual new univedo.Message().sendImpl(-1), "\x20".b(), 'sends nint'
-    assert.deepEqual new univedo.Message().sendImpl(-100), "\x38\x63".b(), 'sends nint'
-    assert.deepEqual new univedo.Message().sendImpl(-1000), "\x39\x03\xe7".b(), 'sends nint'
+    assert.deepEqual new univedo.Message().send(1), "\x01".b(), 'sends uint'
+    assert.deepEqual new univedo.Message().send(42), "\x18\x2a".b(), 'sends uint'
+    assert.deepEqual new univedo.Message().send(100), "\x18\x64".b(), 'sends uint'
+    assert.deepEqual new univedo.Message().send(1000000), "\x1a\x00\x0f\x42\x40".b(), 'sends uint'
+    assert.deepEqual new univedo.Message().send(-1), "\x20".b(), 'sends nint'
+    assert.deepEqual new univedo.Message().send(-100), "\x38\x63".b(), 'sends nint'
+    assert.deepEqual new univedo.Message().send(-1000), "\x39\x03\xe7".b(), 'sends nint'
 
   it 'sends floats', ->
-    assert.deepEqual new univedo.Message().sendImpl(1.1), "\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b(), 'sends float32'
-    assert.deepEqual new univedo.Message().sendImpl(1.0e+300), "\xfb\x7e\x37\xe4\x3c\x88\x00\x75\x9c".b(), 'sends float64'
+    assert.deepEqual new univedo.Message().send(1.1), "\xfb\x3f\xf1\x99\x99\x99\x99\x99\x9a".b(), 'sends float32'
+    assert.deepEqual new univedo.Message().send(1.0e+300), "\xfb\x7e\x37\xe4\x3c\x88\x00\x75\x9c".b(), 'sends float64'
 
   it 'sends strings', ->
-    assert.deepEqual new univedo.Message().sendImpl("foobar".b()), "\x46foobar".b(), 'sends blobs'
-    assert.deepEqual new univedo.Message().sendImpl("foobar"), "\x66foobar".b(), 'sends strings'
-    # assert.deepEqual new univedo.Message().sendImpl("föobar"), "\x66f\xc3\xb6obar".b(), 'sends utf8strings'
+    assert.deepEqual new univedo.Message().send("foobar".b()), "\x46foobar".b(), 'sends blobs'
+    assert.deepEqual new univedo.Message().send("foobar"), "\x66foobar".b(), 'sends strings'
+    # assert.deepEqual new univedo.Message().send("föobar"), "\x66f\xc3\xb6obar".b(), 'sends utf8strings'
 
   it 'sends collections', ->
-    assert.deepEqual new univedo.Message().sendImpl(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'
+    assert.deepEqual new univedo.Message().send(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'
     # The exact order of keys in an object is undefined, but this does the job as of node v0.10.24
-    assert.deepEqual new univedo.Message().sendImpl({foo: 1, bar: 2}), "\xa2\x63foo\x01\x63bar\x02".b(), 'sends maps'
+    assert.deepEqual new univedo.Message().send({foo: 1, bar: 2}), "\xa2\x63foo\x01\x63bar\x02".b(), 'sends maps'
 
   it 'sends times', ->
-    assert.deepEqual new univedo.Message().sendImpl(new Date("2013-03-21T20:04:00Z")), "\xc0\x78\x18\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30.000\x5a".b(), 'sends datetimes'
+    assert.deepEqual new univedo.Message().send(new Date("2013-03-21T20:04:00Z")), "\xc0\x78\x18\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30.000\x5a".b(), 'sends datetimes'
 
   it 'sends multiple', ->
     m = new univedo.Message()

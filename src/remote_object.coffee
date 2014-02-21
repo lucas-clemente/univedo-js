@@ -10,7 +10,7 @@ exports.RemoteObject = class RemoteObject
     @calls = []
     @notification_listeners = []
 
-  callRom: (name, args, onreturn) ->
+  _callRom: (name, args, onreturn) ->
     @connection.stream.sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
     call =
       id: @call_id
@@ -18,10 +18,10 @@ exports.RemoteObject = class RemoteObject
     @calls.push(call)
     @call_id += 1
 
-  sendNotification: (name, args) ->
+  _sendNotification: (name, args) ->
     @connection.stream.sendMessage([@id, ROMOPS.NOTIFY, name, args])
 
-  receive: (message) ->
+  _receive: (message) ->
     opcode = message.shift()
     switch opcode
       when ROMOPS.ANSWER

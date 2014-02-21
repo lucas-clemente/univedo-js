@@ -31,59 +31,59 @@ exports.Message = class Message
 
   # Receiving
 
-  getDataView: (len) ->
+  _getDataView: (len) ->
     dv = new DataView(@recvBuffer, @recvOffset, len)
     @recvOffset += len
     dv
 
-  getLen: (typeInt) ->
+  _getLen: (typeInt) ->
     smallLen = typeInt & 0x1F
     switch smallLen
       when 24
-        @getDataView(1).getUint8(0)
+        @_getDataView(1).getUint8(0)
       when 25
-        @getDataView(2).getUint16(0)
+        @_getDataView(2).getUint16(0)
       when 26
-        @getDataView(4).getUint32(0)
+        @_getDataView(4).getUint32(0)
       when 27
         throw Error "int64 not yet supported in javascript!"
       else
         smallLen
 
   shift: ->
-    typeInt = @getDataView(1).getUint8(0)
+    typeInt = @_getDataView(1).getUint8(0)
     major = typeInt >> 5
 
     switch major
-      when CborMajor.UINT then @getLen(typeInt)
-      when CborMajor.NEGINT then -@getLen(typeInt)-1
+      when CborMajor.UINT then @_getLen(typeInt)
+      when CborMajor.NEGINT then -@_getLen(typeInt)-1
       when CborMajor.SIMPLE
         switch typeInt & 0x1F
           when CborSimple.FALSE then false
           when CborSimple.TRUE then true
           when CborSimple.NULL then null
-          when CborSimple.FLOAT32 then @getDataView(4).getFloat32(0)
-          when CborSimple.FLOAT64 then @getDataView(8).getFloat64(0)
+          when CborSimple.FLOAT32 then @_getDataView(4).getFloat32(0)
+          when CborSimple.FLOAT64 then @_getDataView(8).getFloat64(0)
           else throw Error "invalid simple in cbor protocol"
       when CborMajor.BYTESTRING
-        len = @getLen(typeInt)
+        len = @_getLen(typeInt)
         @recvBuffer.slice(@recvOffset, @recvOffset += len)
       when CborMajor.TEXTSTRING
-        len = @getLen(typeInt)
+        len = @_getLen(typeInt)
         # TODO doesn't work for non-ascii, see test
         arr = new Uint8Array(@recvBuffer.slice(@recvOffset, @recvOffset += len))
         String.fromCharCode.apply(null, arr)
       when CborMajor.ARRAY
-        len = @getLen(typeInt)
+        len = @_getLen(typeInt)
         @shift() for i in [0..len-1]
       when CborMajor.MAP
-        len = @getLen(typeInt)
+        len = @_getLen(typeInt)
         obj = {}
         for i in [0..len-1]
           obj[@shift()] = @shift()
         obj
       when CborMajor.TAG
-        tag = @getLen(typeInt)
+        tag = @_getLen(typeInt)
         switch tag
           when CborTag.DATETIME then new Date(@shift())
           when CborTag.TIME then new Date(@shift())
@@ -97,15 +97,15 @@ exports.Message = class Message
   # Sending
 
   send: (obj) ->
-    @sendBuffer = concatArrayBufs([@sendBuffer, @sendImpl(obj)])
+    @sendBuffer = concatArrayBufs([@sendBuffer, @_sendImpl(obj)])
 
-  sendSimple: (type) ->
+  _sendSimple: (type) ->
     byteArrayFromArray([CborMajor.SIMPLE << 5 | type])
 
-  sendTag: (tag) ->
+  _sendTag: (tag) ->
     byteArrayFromArray([CborMajor.TAG << 5 | tag])
 
-  sendLen: (major, len) ->
+  _sendLen: (major, len) ->
     typeInt = major << 5
     switch
       when len <= 23
@@ -118,50 +118,50 @@ exports.Message = class Message
         byteArrayFromArray([
           typeInt | 26, len >> 24, len >> 16, len >> 8, len & 0xff
         ])
-      else throw Error "sendLen() called with non-uint"
+      else throw Error "_sendLen() called with non-uint"
 
-  sendImpl: (obj) ->
+  _sendImpl: (obj) ->
     switch
-      when obj == null then @sendSimple(CborSimple.NULL)
-      when obj == true then @sendSimple(CborSimple.TRUE)
-      when obj == false then @sendSimple(CborSimple.FALSE)
+      when obj == null then @_sendSimple(CborSimple.NULL)
+      when obj == true then @_sendSimple(CborSimple.TRUE)
+      when obj == false then @_sendSimple(CborSimple.FALSE)
       when typeof obj == "number"
         switch
           when obj >= 0 && obj < 0x100000000 && (obj % 1 == 0)
-            @sendLen(CborMajor.UINT, obj)
+            @_sendLen(CborMajor.UINT, obj)
           when obj < 0 && obj >= -0x100000000 && (obj % 1 == 0)
-            @sendLen(CborMajor.NEGINT, -obj-1)
+            @_sendLen(CborMajor.NEGINT, -obj-1)
           else
             ba = new ArrayBuffer(8)
             new DataView(ba).setFloat64(0, obj)
             concatArrayBufs([
-              @sendSimple(CborSimple.FLOAT64),
+              @_sendSimple(CborSimple.FLOAT64),
               ba
             ])
       when typeof obj == "string"
         concatArrayBufs([
-          @sendLen(CborMajor.TEXTSTRING, obj.length),
+          @_sendLen(CborMajor.TEXTSTRING, obj.length),
           byteArrayFromString(obj)
         ])
       when obj.constructor.name == "ArrayBuffer"
         concatArrayBufs([
-          @sendLen(CborMajor.BYTESTRING, obj.byteLength),
+          @_sendLen(CborMajor.BYTESTRING, obj.byteLength),
           obj
         ])
       when obj.constructor.name == "Array"
-        bufs = [@sendLen(CborMajor.ARRAY, obj.length)]
-        bufs.push(@sendImpl(v)) for v in obj
+        bufs = [@_sendLen(CborMajor.ARRAY, obj.length)]
+        bufs.push(@_sendImpl(v)) for v in obj
         concatArrayBufs(bufs)
       when obj.constructor.name == "Object"
         keys = Object.keys(obj)
-        bufs = [@sendLen(CborMajor.MAP, keys.length)]
+        bufs = [@_sendLen(CborMajor.MAP, keys.length)]
         for key in keys
-          bufs.push(@sendImpl(key))
-          bufs.push(@sendImpl(obj[key]))
+          bufs.push(@_sendImpl(key))
+          bufs.push(@_sendImpl(obj[key]))
         concatArrayBufs(bufs)
       when obj.constructor.name == "Date"
         concatArrayBufs([
-          @sendTag(CborTag.DATETIME),
-          @sendImpl(obj.toISOString())
+          @_sendTag(CborTag.DATETIME),
+          @_sendImpl(obj.toISOString())
         ])
       else throw Error "unsupported object in cbor protocol"

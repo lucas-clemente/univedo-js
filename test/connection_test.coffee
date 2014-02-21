@@ -8,9 +8,10 @@ assert = require 'assert'
 describe 'Connection', ->
   it 'connects to univedo', (done) ->
     c = new univedo.Connection("ws://localhost:9011")
-    c.socket.onopen = (e) ->
-      c.onopen(e)
+    c.onopen = ->
       c.close()
-    c.socket.onclose = (e) ->
-      c.onclose(e)
-      done()
+    c.onclose = done
+    c.onerror = done
+
+  it 'pings', (done) ->
+    done()

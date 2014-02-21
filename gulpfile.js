@@ -63,8 +63,8 @@ gulp.task('uglify', ['test'], function () {
 function test() {
   return gulp.src(paths.tests)
     .pipe(mocha({
-      reporter: 'spec'}
-    ));
+      reporter: 'spec'
+    }));
 }
 
 gulp.task('test', ['src'], function () {
