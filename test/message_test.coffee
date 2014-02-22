@@ -49,6 +49,10 @@ describe 'cbor', ->
   it 'reads records', ->
     assert.equal new univedo.Message("\xc8\x18\x2a".b()).shift(), 42, 'reads record'
 
+  it 'reads remote objects', ->
+    ro_callback = (arr) -> arr
+    assert.deepEqual new univedo.Message("\xc6\x82\x63foo\x63bar".b(), ro_callback).shift(), ["foo", "bar"]
+
   it 'sends simple', ->
     assert.deepEqual new univedo.Message().send(null), "\xf6".b(), 'sends null'
     assert.deepEqual new univedo.Message().send(true), "\xf5".b(), 'sends true'

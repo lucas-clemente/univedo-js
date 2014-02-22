@@ -27,57 +27,57 @@ var banner = [
 ].join('\n');
 
 gulp.task('lint', function () {
-  gulp.src(paths.scripts)
+  return gulp.src(paths.scripts)
     .pipe(coffeelint())
     .pipe(coffeelint.reporter());
 });
 
 gulp.task('src', ['lint'], function () {
-  gulp.src(paths.scripts)
+  return gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
-    .pipe(header('var exports = {};\n'))
+    .pipe(header('var univedo = {};\n'))
     .pipe(wrap({
       deps: ["ws"],
       params: ["ws"],
-      exports: 'exports'
+      exports: 'univedo'
     }))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('uglify', ['test'], function () {
-  gulp.src('dist/univedo.js')
-  .pipe(uglify())
-  .pipe(header(banner, {pkg: pkg}))
-  .pipe(rename('univedo.min.js'))
-  .pipe(size())
-  .pipe(gulp.dest('dist/'))
-  .pipe(gzip())
-  .pipe(rename('univedo.min.js.gz'))
-  .pipe(size())
-  .pipe(gulp.dest('dist/'))
+  return gulp.src('dist/univedo.js')
+    .pipe(uglify())
+    .pipe(header(banner, {pkg: pkg}))
+    .pipe(rename('univedo.min.js'))
+    .pipe(size())
+    .pipe(gulp.dest('dist/'))
+    .pipe(gzip())
+    .pipe(rename('univedo.min.js.gz'))
+    .pipe(size())
+    .pipe(gulp.dest('dist/'));
 });
 
 function test() {
-  return gulp.src(paths.tests)
+  return gulp.src(paths.tests, {read: false})
     .pipe(mocha({
       reporter: 'spec'
     }));
 }
 
 gulp.task('test', ['src'], function () {
-  return test().on('error', function (e) {
-    throw e;
-  });
+  return test();
 });
 
 gulp.task('test-no-crash', ['src'], function() {
-  test().on('error', function() {})
+  return test().on('error', function() {
+    this.emit('end');
+  })
 });
 
 gulp.task('watch', function () {
-  gulp.watch([paths.scripts, paths.tests], ['test-no-crash']);
+  return gulp.watch([paths.scripts, paths.tests], ['test-no-crash']);
 });
 
 gulp.task('default', ['uglify']);

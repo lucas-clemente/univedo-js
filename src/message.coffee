@@ -23,8 +23,8 @@ CborSimple =
   FLOAT32: 26
   FLOAT64: 27
 
-exports.Message = class Message
-  constructor: (@recvBuffer) ->
+univedo.Message = class Message
+  constructor: (@recvBuffer, @roCallback) ->
     @recvOffset = 0
     @sendBuffer = new ArrayBuffer(0)
 
@@ -90,6 +90,8 @@ exports.Message = class Message
           when CborTag.UUID
             raw2Uuid(@shift())
           when CborTag.RECORD then @shift()
+          when CborTag.REMOTEOBJECT
+            @roCallback(@shift())
           else throw Error "invalid tag in cbor protocol"
       else throw Error "invalid major in cbor protocol"
 

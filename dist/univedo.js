@@ -5,50 +5,7 @@
  */
 define(["ws"],function(ws){
 
-var exports = {};
-var Connection,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-exports.Connection = Connection = (function() {
-  function Connection(url) {
-    this.url = url;
-    this._onclose = __bind(this._onclose, this);
-    this._onopen = __bind(this._onopen, this);
-    this.socket = new ws(this.url);
-    this.socket.onopen = this._onopen;
-    this.socket.onmessage = this._onmessage;
-    this.socket.onerror = this._onerror;
-    this.socket.onclose = this._onclose;
-  }
-
-  Connection.prototype.close = function() {
-    return this.socket.close();
-  };
-
-  Connection.prototype._onopen = function(e) {
-    return this.onopen();
-  };
-
-  Connection.prototype._onclose = function(e) {
-    return this.onclose();
-  };
-
-  Connection.prototype._onmessage = function(e) {
-    return console.log("message");
-  };
-
-  Connection.prototype._onerror = function(e) {
-    return console.log("error");
-  };
-
-  Connection.prototype.onopen = function() {};
-
-  Connection.prototype.onclose = function() {};
-
-  return Connection;
-
-})();
-
+var univedo = {};
 var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
 
 byteToHex = [];
@@ -126,9 +83,10 @@ CborSimple = {
   FLOAT64: 27
 };
 
-exports.Message = Message = (function() {
-  function Message(recvBuffer) {
+univedo.Message = Message = (function() {
+  function Message(recvBuffer, roCallback) {
     this.recvBuffer = recvBuffer;
+    this.roCallback = roCallback;
     this.recvOffset = 0;
     this.sendBuffer = new ArrayBuffer(0);
   }
@@ -216,6 +174,8 @@ exports.Message = Message = (function() {
             return raw2Uuid(this.shift());
           case CborTag.RECORD:
             return this.shift();
+          case CborTag.REMOTEOBJECT:
+            return this.roCallback(this.shift());
           default:
             throw Error("invalid tag in cbor protocol");
         }
@@ -315,18 +275,19 @@ ROMOPS = {
   DELETE: 4
 };
 
-exports.RemoteObject = RemoteObject = (function() {
-  function RemoteObject(connection, id) {
-    this.connection = connection;
+univedo.RemoteObject = RemoteObject = (function() {
+  function RemoteObject(session, id) {
+    this.session = session;
     this.id = id;
     this.call_id = 0;
     this.calls = [];
     this.notification_listeners = [];
+    this.session._remote_objects[this.id] = this;
   }
 
   RemoteObject.prototype._callRom = function(name, args, onreturn) {
     var call;
-    this.connection.stream.sendMessage([this.id, ROMOPS.CALL, this.call_id, name, args]);
+    this.session._sendMessage([this.id, ROMOPS.CALL, this.call_id, name, args]);
     call = {
       id: this.call_id,
       onreturn: onreturn
@@ -336,7 +297,7 @@ exports.RemoteObject = RemoteObject = (function() {
   };
 
   RemoteObject.prototype._sendNotification = function(name, args) {
-    return this.connection.stream.sendMessage([this.id, ROMOPS.NOTIFY, name, args]);
+    return this.session._sendMessage([this.id, ROMOPS.NOTIFY, name, args]);
   };
 
   RemoteObject.prototype._receive = function(message) {
@@ -351,6 +312,11 @@ exports.RemoteObject = RemoteObject = (function() {
             result = message.shift();
             call = this.calls.splice(call_id, 1)[0];
             return call.onreturn(result);
+          case 2:
+            throw Error(message.shift());
+            break;
+          default:
+            throw Error("unknown rom answer status " + status);
         }
         break;
       case ROMOPS.NOTIFY:
@@ -375,6 +341,76 @@ exports.RemoteObject = RemoteObject = (function() {
 
 })();
 
-return exports;
+var Session,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+univedo.Session = Session = (function() {
+  function Session(url, args, onopen, onclose, onerror) {
+    this.onopen = onopen != null ? onopen : (function() {});
+    this.onclose = onclose != null ? onclose : (function() {});
+    this.onerror = onerror != null ? onerror : (function() {});
+    this._receiveRo = __bind(this._receiveRo, this);
+    this._onmessage = __bind(this._onmessage, this);
+    this._onclose = __bind(this._onclose, this);
+    this._socket = new ws(url);
+    this._socket.onopen = (function(_this) {
+      return function() {
+        _this.urologin = new univedo.RemoteObject(_this, 0);
+        return _this.urologin._callRom('getSession', [args], function(s) {
+          _this.session = s;
+          return _this.onopen();
+        });
+      };
+    })(this);
+    this._socket.onmessage = this._onmessage;
+    this._socket.onerror = this._onerror;
+    this._socket.onclose = this._onclose;
+    this._remote_objects = {};
+  }
+
+  Session.prototype.close = function() {
+    return this._socket.close();
+  };
+
+  Session.prototype.ping = function(v, onreturn) {
+    return this.session._callRom('ping', [v], onreturn);
+  };
+
+  Session.prototype._onclose = function(e) {
+    return this.onclose();
+  };
+
+  Session.prototype._onmessage = function(e) {
+    var msg;
+    msg = new univedo.Message(new Uint8Array(e.data).buffer, this._receiveRo);
+    return this._remote_objects[msg.shift()]._receive(msg);
+  };
+
+  Session.prototype._receiveRo = function(arr) {
+    var id, ro;
+    id = arr[0];
+    ro = new univedo.RemoteObject(this, id);
+    return this._remote_objects[id] = ro;
+  };
+
+  Session.prototype._onerror = function(e) {
+    return console.log("error");
+  };
+
+  Session.prototype._sendMessage = function(m) {
+    var msg, v, _i, _len;
+    msg = new univedo.Message();
+    for (_i = 0, _len = m.length; _i < _len; _i++) {
+      v = m[_i];
+      msg.send(v);
+    }
+    return this._socket.send(msg.sendBuffer);
+  };
+
+  return Session;
+
+})();
+
+return univedo;
 
 });
