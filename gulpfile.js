@@ -19,10 +19,9 @@ var paths = {
 var pkg = require('./package.json');
 var banner = [
   '/**',
-  ' * <%= pkg.name %> - <%= pkg.description %>',
-  ' * @version v<%= pkg.version %>',
-  ' * @link <%= pkg.homepage %>',
-  ' * @license <%= pkg.license %>',
+  ' * <%= pkg.name %> v<%= pkg.version %> ',
+  ' * <%= pkg.homepage %>',
+  ' * <%= pkg.license %> license, (c) 2013-2014 Univedo',
   ' */',
   ''
 ].join('\n');

@@ -1,8 +1,7 @@
 /**
- * univedo - Univedo client for javascript
- * @version v0.1.0
- * @link https://github.com/lucas-clemente/univedo-js
- * @license MIT
+ * univedo v0.1.0 
+ * https://github.com/lucas-clemente/univedo-js
+ * MIT license, (c) 2013-2014 Univedo
  */
 define(["ws"],function(ws){
 
