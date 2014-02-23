@@ -6,7 +6,7 @@ var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var wrap = require('gulp-wrap-amd');
 var coffeelint = require('gulp-coffeelint');
-var mocha = require('gulp-mocha');
+var mocha = require('gulp-spawn-mocha');
 var gzip = require('gulp-gzip');
 var size = require('gulp-size');
 var header = require('gulp-header');
@@ -63,6 +63,7 @@ function test() {
   return gulp.src(paths.tests, {read: false})
     .pipe(mocha({
       reporter: 'spec',
+      compilers: ['coffee:coffee-script/register'],
       timeout: 1000000
     }));
 }
