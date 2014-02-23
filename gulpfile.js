@@ -62,7 +62,8 @@ gulp.task('uglify', ['test'], function () {
 function test() {
   return gulp.src(paths.tests, {read: false})
     .pipe(mocha({
-      reporter: 'spec'
+      reporter: 'spec',
+      timeout: 1000000
     }));
 }
 

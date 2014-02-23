@@ -349,12 +349,14 @@ univedo.Session = Session = (function() {
     this.onopen = onopen != null ? onopen : (function() {});
     this.onclose = onclose != null ? onclose : (function() {});
     this.onerror = onerror != null ? onerror : (function() {});
+    this._onerror = __bind(this._onerror, this);
     this._receiveRo = __bind(this._receiveRo, this);
     this._onmessage = __bind(this._onmessage, this);
     this._onclose = __bind(this._onclose, this);
     this._socket = new ws(url);
     this._socket.onopen = (function(_this) {
       return function() {
+        console.log('onopen');
         _this.urologin = new univedo.RemoteObject(_this, 0);
         return _this.urologin._callRom('getSession', [args], function(s) {
           _this.session = s;
@@ -377,11 +379,13 @@ univedo.Session = Session = (function() {
   };
 
   Session.prototype._onclose = function(e) {
+    console.log('socket close');
     return this.onclose();
   };
 
   Session.prototype._onmessage = function(e) {
     var msg;
+    console.log('onmessage');
     msg = new univedo.Message(new Uint8Array(e.data).buffer, this._receiveRo);
     return this._remote_objects[msg.shift()]._receive(msg);
   };
@@ -394,11 +398,13 @@ univedo.Session = Session = (function() {
   };
 
   Session.prototype._onerror = function(e) {
-    return console.log("error");
+    console.log("error " + e);
+    return this.onerror();
   };
 
   Session.prototype._sendMessage = function(m) {
     var msg, v, _i, _len;
+    console.log(m);
     msg = new univedo.Message();
     for (_i = 0, _len = m.length; _i < _len; _i++) {
       v = m[_i];

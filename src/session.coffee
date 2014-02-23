@@ -2,6 +2,7 @@ univedo.Session = class Session
   constructor: (url, args, @onopen = (->), @onclose = (->), @onerror = (->)) ->
     @_socket = new ws(url)
     @_socket.onopen = =>
+      console.log 'onopen'
       @urologin = new univedo.RemoteObject(this, 0)
       @urologin._callRom 'getSession', [args], (s) =>
         @session = s
@@ -18,9 +19,11 @@ univedo.Session = class Session
     @session._callRom('ping', [v], onreturn)
 
   _onclose: (e) =>
+    console.log 'socket close'
     @onclose()
 
   _onmessage: (e) =>
+    console.log 'onmessage'
     # This is unneccessary in the browser. However node's ws returns a Buffer
     # instead of an ArrayBuffer, which is normalized to an ArrayBuffer here.
     msg = new univedo.Message(new Uint8Array(e.data).buffer, @_receiveRo)
@@ -31,10 +34,12 @@ univedo.Session = class Session
     ro = new univedo.RemoteObject(this, id)
     @_remote_objects[id] = ro
 
-  _onerror: (e) ->
-    console.log "error"
+  _onerror: (e) =>
+    console.log "error " + e
+    @onerror()
 
   _sendMessage: (m) ->
+    console.log m
     msg = new univedo.Message()
     msg.send v for v in m
     @_socket.send(msg.sendBuffer)

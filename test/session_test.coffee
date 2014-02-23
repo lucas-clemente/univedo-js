@@ -20,6 +20,23 @@ describe 'Session', ->
     @session.close()
     @session.onclose = done
 
+  # pingTest = (name, value) ->
+  #   it 'pings ' + name, (done) ->
+  #     @session.ping value, (r) ->
+  #       assert.deepEqual value, r
+  #       done()
+
+  # pingTest 'null', null
+  # pingTest 'true', true
+  # pingTest 'false', false
+  # pingTest 'ints', 42
+  # pingTest 'negative ints', -42
+  # pingTest 'floats', 1.1
+  # pingTest 'strings', "foobar"
+  # pingTest 'arrays', [1, 2, 3]
+  # pingTest 'maps', {a: 1, b: 2}
+  # pingTest 'times', new Date(1363896240)
+
   it 'pings bools', (done) ->
     @session.ping true, (r) ->
       assert.equal true, r
