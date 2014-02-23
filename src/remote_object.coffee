@@ -5,11 +5,12 @@ ROMOPS =
   DELETE: 4
 
 univedo.RemoteObject = class RemoteObject
-  constructor: (@session, @id) ->
+  constructor: (@session, @id, method_names = []) ->
     @call_id = 0
     @calls = []
     @notification_listeners = []
     @session._remote_objects[@id] = this
+    @_addROMs method_names
 
   _callRom: (name, args, onreturn) ->
     @session._sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
@@ -47,5 +48,14 @@ univedo.RemoteObject = class RemoteObject
           throw Error "unhandled notification " + name
       else throw Error "unknown romop"
 
-  on: (name, callback) ->
+  _on: (name, callback) ->
     @notification_listeners[name] = callback
+
+  _addROMs: (rom_names) ->
+    for rom in rom_names
+      this[rom] = ((rom) ->
+        ->
+          args = Array.prototype.slice.call(arguments, 0)
+          cb = args.pop()
+          @_callRom rom, args, cb
+      )(rom)

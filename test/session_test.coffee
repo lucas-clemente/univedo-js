@@ -20,29 +20,24 @@ describe 'Session', ->
     @session.close()
     @session.onclose = done
 
-  # pingTest = (name, value) ->
-  #   it 'pings ' + name, (done) ->
-  #     @session.ping value, (r) ->
-  #       assert.deepEqual value, r
-  #       done()
+  pingTest = (name, value) ->
+    it 'pings ' + name, (done) ->
+      @session.ping value, (r) ->
+        assert.deepEqual value, r
+        done()
 
-  # pingTest 'null', null
-  # pingTest 'true', true
-  # pingTest 'false', false
-  # pingTest 'ints', 42
-  # pingTest 'negative ints', -42
-  # pingTest 'floats', 1.1
-  # pingTest 'strings', "foobar"
-  # pingTest 'arrays', [1, 2, 3]
-  # pingTest 'maps', {a: 1, b: 2}
-  # pingTest 'times', new Date(1363896240)
+  pingTest 'null', null
+  pingTest 'true', true
+  pingTest 'false', false
+  pingTest 'ints', 42
+  pingTest 'negative ints', -42
+  pingTest 'floats', 1.1
+  pingTest 'strings', "foobar"
+  pingTest 'arrays', [1, 2, 3]
+  pingTest 'maps', {a: 1, b: 2}
+  pingTest 'times', new Date(1363896240)
 
-  it 'pings bools', (done) ->
-    @session.ping true, (r) ->
-      assert.equal true, r
-      done()
-      
-  it 'pings ints', (done) ->
-    @session.ping 42, (r) ->
-      assert.equal 42, r
+  it 'gets perspectives', (done) ->
+    @session.getPerspective '6e5a3a08-9bb0-4d92-ad04-7c6fed3874fa', (p) ->
+      assert.equal p.constructor.name, "Perspective"
       done()

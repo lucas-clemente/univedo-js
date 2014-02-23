@@ -36,7 +36,6 @@ gulp.task('src', ['lint'], function () {
   return gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
-    .pipe(header('var univedo = {};\n'))
     .pipe(wrap({
       deps: ["ws"],
       params: ["ws"],
@@ -64,7 +63,7 @@ function test() {
     .pipe(mocha({
       reporter: 'spec',
       compilers: ['coffee:coffee-script/register'],
-      timeout: 1000000
+      timeout: 2000
     }));
 }
 

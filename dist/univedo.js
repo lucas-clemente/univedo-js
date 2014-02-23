@@ -5,7 +5,13 @@
  */
 define(["ws"],function(ws){
 
-var univedo = {};
+"use strict";
+var univedo;
+
+univedo = {
+  remote_classes: {}
+};
+
 var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
 
 byteToHex = [];
@@ -276,13 +282,17 @@ ROMOPS = {
 };
 
 univedo.RemoteObject = RemoteObject = (function() {
-  function RemoteObject(session, id) {
+  function RemoteObject(session, id, method_names) {
     this.session = session;
     this.id = id;
+    if (method_names == null) {
+      method_names = [];
+    }
     this.call_id = 0;
     this.calls = [];
     this.notification_listeners = [];
     this.session._remote_objects[this.id] = this;
+    this._addROMs(method_names);
   }
 
   RemoteObject.prototype._callRom = function(name, args, onreturn) {
@@ -333,19 +343,66 @@ univedo.RemoteObject = RemoteObject = (function() {
     }
   };
 
-  RemoteObject.prototype.on = function(name, callback) {
+  RemoteObject.prototype._on = function(name, callback) {
     return this.notification_listeners[name] = callback;
+  };
+
+  RemoteObject.prototype._addROMs = function(rom_names) {
+    var rom, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = rom_names.length; _i < _len; _i++) {
+      rom = rom_names[_i];
+      _results.push(this[rom] = (function(rom) {
+        return function() {
+          var args, cb;
+          args = Array.prototype.slice.call(arguments, 0);
+          cb = args.pop();
+          return this._callRom(rom, args, cb);
+        };
+      })(rom));
+    }
+    return _results;
   };
 
   return RemoteObject;
 
 })();
 
+var Connection, Perspective,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Connection = (function(_super) {
+  __extends(Connection, _super);
+
+  function Connection(session, id) {
+    Connection.__super__.constructor.call(this, session, id, ['ping', 'getPerspective']);
+  }
+
+  return Connection;
+
+})(univedo.RemoteObject);
+
+univedo.remote_classes['com.univedo.connection'] = Connection;
+
+Perspective = (function(_super) {
+  __extends(Perspective, _super);
+
+  function Perspective(session, id) {
+    Perspective.__super__.constructor.call(this, session, id, ['query']);
+  }
+
+  return Perspective;
+
+})(univedo.RemoteObject);
+
+univedo.remote_classes['com.univedo.perspective'] = Perspective;
+
 var Session,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 univedo.Session = Session = (function() {
-  function Session(url, args, onopen, onclose, onerror) {
+  function Session(url, opts, onopen, onclose, onerror) {
     this.onopen = onopen != null ? onopen : (function() {});
     this.onclose = onclose != null ? onclose : (function() {});
     this.onerror = onerror != null ? onerror : (function() {});
@@ -356,10 +413,9 @@ univedo.Session = Session = (function() {
     this._socket = new ws(url);
     this._socket.onopen = (function(_this) {
       return function() {
-        console.log('onopen');
-        _this.urologin = new univedo.RemoteObject(_this, 0);
-        return _this.urologin._callRom('getSession', [args], function(s) {
-          _this.session = s;
+        _this._urologin = new univedo.RemoteObject(_this, 0, ['getSession']);
+        return _this._urologin.getSession(opts, function(conn) {
+          _this._connection = conn;
           return _this.onopen();
         });
       };
@@ -375,26 +431,28 @@ univedo.Session = Session = (function() {
   };
 
   Session.prototype.ping = function(v, onreturn) {
-    return this.session._callRom('ping', [v], onreturn);
+    return this._connection.ping(v, onreturn);
+  };
+
+  Session.prototype.getPerspective = function(uuid, onreturn) {
+    return this._connection.getPerspective(uuid, onreturn);
   };
 
   Session.prototype._onclose = function(e) {
-    console.log('socket close');
     return this.onclose();
   };
 
   Session.prototype._onmessage = function(e) {
     var msg;
-    console.log('onmessage');
     msg = new univedo.Message(new Uint8Array(e.data).buffer, this._receiveRo);
     return this._remote_objects[msg.shift()]._receive(msg);
   };
 
   Session.prototype._receiveRo = function(arr) {
-    var id, ro;
-    id = arr[0];
-    ro = new univedo.RemoteObject(this, id);
-    return this._remote_objects[id] = ro;
+    var id, klass, name, ro;
+    id = arr[0], name = arr[1];
+    klass = univedo.remote_classes[name] || univedo.RemoteObject;
+    return ro = new klass(this, id);
   };
 
   Session.prototype._onerror = function(e) {
@@ -404,7 +462,6 @@ univedo.Session = Session = (function() {
 
   Session.prototype._sendMessage = function(m) {
     var msg, v, _i, _len;
-    console.log(m);
     msg = new univedo.Message();
     for (_i = 0, _len = m.length; _i < _len; _i++) {
       v = m[_i];

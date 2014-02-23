@@ -24,6 +24,12 @@ describe 'remote object', ->
     assert.equal ro.call_id, 1
     assert.deepEqual @sent_messages, [[2, 1, 0, 'foo', [1, 2, 3]]]
 
+  it 'calls added roms', ->
+    ro = new univedo.RemoteObject(@session, 2)
+    ro._addROMs ['foo']
+    ro.foo(1, 2, 3, null)
+    assert.deepEqual @sent_messages, [[2, 1, 0, 'foo', [1, 2, 3]]]
+
   it 'sends notifications', ->
     ro = new univedo.RemoteObject(@session, 2)
     ro._sendNotification("foo", [1, 2, 3])
@@ -38,6 +44,6 @@ describe 'remote object', ->
 
   it 'receives notifications', (done) ->
     ro = new univedo.RemoteObject(@session, 2)
-    ro.on 'foo', ->
+    ro._on 'foo', ->
       done()
     ro._receive([3, 'foo', [42]])
