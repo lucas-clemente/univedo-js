@@ -70,9 +70,7 @@ univedo.Message = class Message
         @recvBuffer.slice(@recvOffset, @recvOffset += len)
       when CborMajor.TEXTSTRING
         len = @_getLen(typeInt)
-        # TODO doesn't work for non-ascii, see test
-        arr = new Uint8Array(@recvBuffer.slice(@recvOffset, @recvOffset += len))
-        String.fromCharCode.apply(null, arr)
+        decodeUtf8(@recvBuffer.slice(@recvOffset, @recvOffset += len))
       when CborMajor.ARRAY
         len = @_getLen(typeInt)
         @shift() for i in [0..len-1]
@@ -141,9 +139,10 @@ univedo.Message = class Message
               ba
             ])
       when typeof obj == "string"
+        utf8 = encodeUtf8(obj)
         concatArrayBufs([
-          @_sendLen(CborMajor.TEXTSTRING, obj.length),
-          byteArrayFromString(obj)
+          @_sendLen(CborMajor.TEXTSTRING, utf8.byteLength),
+          utf8
         ])
       when obj.constructor.name == "ArrayBuffer"
         concatArrayBufs([

@@ -30,7 +30,7 @@ describe 'cbor', ->
   it 'reads strings', ->
     assert.deepEqual new univedo.Message("\x46foobar".b()).shift(), "foobar".b(), 'reads blobs'
     assert.equal new univedo.Message("\x66foobar".b()).shift(), "foobar", 'reads strings'
-    # assert.deepEqual new univedo.Message("\x66f\xc3\xb6obar".b()).shift(), "föobar", 'reads utf8strings'
+    assert.deepEqual new univedo.Message("\x67f\xc3\xb6obar".b()).shift(), "föobar", 'reads utf8strings'
 
   it 'reads collections', ->
     assert.deepEqual new univedo.Message("\x82\x63foo\x63bar".b()).shift(), ["foo", "bar"], 'reads arrays'
@@ -71,7 +71,7 @@ describe 'cbor', ->
   it 'sends strings', ->
     assert.deepEqual new univedo.Message().send("foobar".b()), "\x46foobar".b(), 'sends blobs'
     assert.deepEqual new univedo.Message().send("foobar"), "\x66foobar".b(), 'sends strings'
-    # assert.deepEqual new univedo.Message().send("föobar"), "\x66f\xc3\xb6obar".b(), 'sends utf8strings'
+    assert.deepEqual new univedo.Message().send("föobar"), "\x67f\xc3\xb6obar".b(), 'sends utf8strings'
 
   it 'sends collections', ->
     assert.deepEqual new univedo.Message().send(["foo", "bar"]), "\x82\x63foo\x63bar".b(), 'sends arrays'

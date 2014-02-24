@@ -39,3 +39,17 @@ concatArrayBufs = (bufs) ->
     tmp.set(new Uint8Array(b), pos)
     pos += b.byteLength
   tmp.buffer
+
+# Taken from
+# http://ecmanaut.blogspot.com/2006/07/encoding-decoding-utf8-in-javascript.html
+
+encodeUtf8 = (string) ->
+  utf8 = unescape(encodeURIComponent(string))
+  octets = new Uint8Array(utf8.length)
+  for i in [0...utf8.length]
+    octets[i] = utf8.charCodeAt(i)
+  octets.buffer
+
+decodeUtf8 = (buffer) ->
+  utf8 = String.fromCharCode.apply(null, new Uint8Array(buffer))
+  decodeURIComponent(escape(utf8))

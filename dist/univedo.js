@@ -12,7 +12,7 @@ univedo = {
   remote_classes: {}
 };
 
-var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, hexToByte, i, raw2Uuid, _i;
+var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, decodeUtf8, encodeUtf8, hexToByte, i, raw2Uuid, _i;
 
 byteToHex = [];
 
@@ -57,6 +57,22 @@ concatArrayBufs = function(bufs) {
     pos += b.byteLength;
   }
   return tmp.buffer;
+};
+
+encodeUtf8 = function(string) {
+  var octets, utf8, _j, _ref;
+  utf8 = unescape(encodeURIComponent(string));
+  octets = new Uint8Array(utf8.length);
+  for (i = _j = 0, _ref = utf8.length; 0 <= _ref ? _j < _ref : _j > _ref; i = 0 <= _ref ? ++_j : --_j) {
+    octets[i] = utf8.charCodeAt(i);
+  }
+  return octets.buffer;
+};
+
+decodeUtf8 = function(buffer) {
+  var utf8;
+  utf8 = String.fromCharCode.apply(null, new Uint8Array(buffer));
+  return decodeURIComponent(escape(utf8));
 };
 
 var CborMajor, CborSimple, CborTag, Message;
@@ -123,7 +139,7 @@ univedo.Message = Message = (function() {
   };
 
   Message.prototype.shift = function() {
-    var arr, i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
+    var i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
     typeInt = this._getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -152,8 +168,7 @@ univedo.Message = Message = (function() {
         return this.recvBuffer.slice(this.recvOffset, this.recvOffset += len);
       case CborMajor.TEXTSTRING:
         len = this._getLen(typeInt);
-        arr = new Uint8Array(this.recvBuffer.slice(this.recvOffset, this.recvOffset += len));
-        return String.fromCharCode.apply(null, arr);
+        return decodeUtf8(this.recvBuffer.slice(this.recvOffset, this.recvOffset += len));
       case CborMajor.ARRAY:
         len = this._getLen(typeInt);
         _results = [];
@@ -221,7 +236,7 @@ univedo.Message = Message = (function() {
   };
 
   Message.prototype._sendImpl = function(obj) {
-    var ba, bufs, key, keys, v, _i, _j, _len, _len1;
+    var ba, bufs, key, keys, utf8, v, _i, _j, _len, _len1;
     switch (false) {
       case obj !== null:
         return this._sendSimple(CborSimple.NULL);
@@ -242,7 +257,8 @@ univedo.Message = Message = (function() {
         }
         break;
       case typeof obj !== "string":
-        return concatArrayBufs([this._sendLen(CborMajor.TEXTSTRING, obj.length), byteArrayFromString(obj)]);
+        utf8 = encodeUtf8(obj);
+        return concatArrayBufs([this._sendLen(CborMajor.TEXTSTRING, utf8.byteLength), utf8]);
       case obj.constructor.name !== "ArrayBuffer":
         return concatArrayBufs([this._sendLen(CborMajor.BYTESTRING, obj.byteLength), obj]);
       case obj.constructor.name !== "Array":
