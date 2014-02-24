@@ -139,7 +139,7 @@ univedo.Message = Message = (function() {
   };
 
   Message.prototype.shift = function() {
-    var i, len, major, obj, tag, typeInt, _i, _j, _ref, _ref1, _results;
+    var i, len, major, obj, tag, typeInt, _i, _j, _results;
     typeInt = this._getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -172,7 +172,7 @@ univedo.Message = Message = (function() {
       case CborMajor.ARRAY:
         len = this._getLen(typeInt);
         _results = [];
-        for (i = _i = 0, _ref = len - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        for (i = _i = 0; 0 <= len ? _i < len : _i > len; i = 0 <= len ? ++_i : --_i) {
           _results.push(this.shift());
         }
         return _results;
@@ -180,7 +180,7 @@ univedo.Message = Message = (function() {
       case CborMajor.MAP:
         len = this._getLen(typeInt);
         obj = {};
-        for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+        for (i = _j = 0; 0 <= len ? _j < len : _j > len; i = 0 <= len ? ++_j : --_j) {
           obj[this.shift()] = this.shift();
         }
         return obj;
@@ -312,13 +312,8 @@ univedo.RemoteObject = RemoteObject = (function() {
   }
 
   RemoteObject.prototype._callRom = function(name, args, onreturn) {
-    var call;
     this.session._sendMessage([this.id, ROMOPS.CALL, this.call_id, name, args]);
-    call = {
-      id: this.call_id,
-      onreturn: onreturn
-    };
-    this.calls.push(call);
+    this.calls[this.call_id] = onreturn;
     return this.call_id += 1;
   };
 
@@ -327,7 +322,7 @@ univedo.RemoteObject = RemoteObject = (function() {
   };
 
   RemoteObject.prototype._receive = function(message) {
-    var args, call, call_id, listener, name, opcode, result, status;
+    var args, call_id, listener, name, opcode, result, status;
     opcode = message.shift();
     switch (opcode) {
       case ROMOPS.ANSWER:
@@ -336,8 +331,8 @@ univedo.RemoteObject = RemoteObject = (function() {
         switch (status) {
           case 0:
             result = message.shift();
-            call = this.calls.splice(call_id, 1)[0];
-            return call.onreturn(result);
+            this.calls[call_id](result);
+            return this.calls[call_id] = null;
           case 2:
             throw Error(message.shift());
             break;
@@ -384,7 +379,7 @@ univedo.RemoteObject = RemoteObject = (function() {
 
 })();
 
-var Connection, Perspective,
+var Connection, Perspective, Query, Result, Statement,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -413,6 +408,81 @@ Perspective = (function(_super) {
 })(univedo.RemoteObject);
 
 univedo.remote_classes['com.univedo.perspective'] = Perspective;
+
+Query = (function(_super) {
+  __extends(Query, _super);
+
+  function Query(session, id) {
+    Query.__super__.constructor.call(this, session, id, ['prepare']);
+  }
+
+  return Query;
+
+})(univedo.RemoteObject);
+
+univedo.remote_classes['com.univedo.query'] = Query;
+
+Statement = (function(_super) {
+  __extends(Statement, _super);
+
+  function Statement(session, id) {
+    Statement.__super__.constructor.call(this, session, id);
+  }
+
+  Statement.prototype.execute = function(binds, cb) {
+    if (!cb) {
+      cb = binds;
+      binds = {};
+    }
+    return this._callRom('execute', [binds], function(result) {
+      return result._oncomplete = function() {
+        return cb(result);
+      };
+    });
+  };
+
+  return Statement;
+
+})(univedo.RemoteObject);
+
+univedo.remote_classes['com.univedo.statement'] = Statement;
+
+Result = (function(_super) {
+  __extends(Result, _super);
+
+  function Result(session, id) {
+    Result.__super__.constructor.call(this, session, id);
+    this._on('setError', this._onerror);
+    this.rows = [];
+    this._on('appendRow', function(row) {
+      return this.rows.push(row);
+    });
+    this._on('setComplete', function() {
+      return this._oncomplete();
+    });
+    this.affected_rows = null;
+    this.num_affected_rows = null;
+    this._on('setAffectedRecords', function(r) {
+      this.affected_rows = r;
+      return this.num_affected_rows = this.affected_rows.length;
+    });
+    this.last_inserted_id = null;
+    this._on('setRecord', function(r) {
+      return this.last_inserted_id = r;
+    });
+  }
+
+  Result.prototype._onerror = function(msg) {
+    throw Error(msg);
+  };
+
+  Result.prototype._oncomplete = function() {};
+
+  return Result;
+
+})(univedo.RemoteObject);
+
+univedo.remote_classes['com.univedo.result'] = Result;
 
 var Session,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -467,12 +537,15 @@ univedo.Session = Session = (function() {
   Session.prototype._receiveRo = function(arr) {
     var id, klass, name, ro;
     id = arr[0], name = arr[1];
-    klass = univedo.remote_classes[name] || univedo.RemoteObject;
+    klass = univedo.remote_classes[name];
+    if (!klass) {
+      throw Error("unknown remote object class " + name);
+    }
     return ro = new klass(this, id);
   };
 
   Session.prototype._onerror = function(e) {
-    console.log("error " + e);
+    console.error("error " + e);
     return this.onerror();
   };
 

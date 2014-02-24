@@ -17,7 +17,6 @@ describe 'remote object', ->
   it 'calls roms', ->
     ro = new univedo.RemoteObject(@session, 2)
     ro._callRom("foo", [1, 2, 3])
-    assert.deepEqual ro.calls, [{id: 0, onreturn: undefined}]
     assert.equal ro.call_id, 1
     assert.deepEqual @sent_messages, [[2, 1, 0, 'foo', [1, 2, 3]]]
 

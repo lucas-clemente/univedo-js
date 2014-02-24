@@ -47,6 +47,7 @@ gulp.task('src', ['lint'], function () {
 
 gulp.task('uglify', ['test'], function () {
   return gulp.src('dist/univedo.js')
+    .pipe(size())
     .pipe(uglify())
     .pipe(header(banner, {pkg: pkg}))
     .pipe(rename('univedo.min.js'))

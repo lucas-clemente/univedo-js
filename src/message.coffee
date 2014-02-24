@@ -73,11 +73,11 @@ univedo.Message = class Message
         decodeUtf8(@recvBuffer.slice(@recvOffset, @recvOffset += len))
       when CborMajor.ARRAY
         len = @_getLen(typeInt)
-        @shift() for i in [0..len-1]
+        @shift() for i in [0...len]
       when CborMajor.MAP
         len = @_getLen(typeInt)
         obj = {}
-        for i in [0..len-1]
+        for i in [0...len]
           obj[@shift()] = @shift()
         obj
       when CborMajor.TAG

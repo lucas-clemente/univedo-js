@@ -14,10 +14,7 @@ univedo.RemoteObject = class RemoteObject
 
   _callRom: (name, args, onreturn) ->
     @session._sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
-    call =
-      id: @call_id
-      onreturn: onreturn
-    @calls.push(call)
+    @calls[@call_id] = onreturn
     @call_id += 1
 
   _sendNotification: (name, args) ->
@@ -32,8 +29,8 @@ univedo.RemoteObject = class RemoteObject
         switch status
           when 0
             result = message.shift()
-            call = @calls.splice(call_id, 1)[0]
-            call.onreturn(result)
+            @calls[call_id](result)
+            @calls[call_id] = null
           when 2
             # TODO proper error handling
             throw Error message.shift()

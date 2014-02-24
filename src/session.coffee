@@ -31,11 +31,12 @@ univedo.Session = class Session
 
   _receiveRo: (arr) =>
     [id, name] = arr
-    klass = univedo.remote_classes[name] || univedo.RemoteObject
+    klass = univedo.remote_classes[name]
+    throw Error "unknown remote object class " + name unless klass
     ro = new klass(this, id)
 
   _onerror: (e) =>
-    console.log "error " + e
+    console.error "error " + e
     @onerror()
 
   _sendMessage: (m) ->
