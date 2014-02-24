@@ -1,17 +1,14 @@
 requirejs = require 'requirejs'
-requirejs.config
-  nodeRequire: require
-
 univedo = requirejs('dist/univedo.js')
 assert = require 'assert'
 
 URL = "ws://localhost:9000/f8018f09-fb75-4d3d-8e11-44b2dc796130"
-ARGS =
+OPTS =
   9744: "marvin"
 
 describe 'Session', ->
   beforeEach (done) ->
-    @session = new univedo.Session URL, ARGS, done
+    @session = new univedo.Session URL, OPTS, done
 
   afterEach ->
     @session.close() if @session._socket.readyState == 1

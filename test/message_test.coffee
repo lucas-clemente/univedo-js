@@ -1,7 +1,4 @@
 requirejs = require 'requirejs'
-requirejs.config
-  nodeRequire: require
-
 univedo = requirejs('dist/univedo.js')
 assert = require 'assert'
 
