@@ -51,8 +51,8 @@ describe 'Result', ->
         @query.prepare 'update dummy set dummy_int8 = 42 where id = ?', (s) =>
           s.execute {0: id}, (r) =>
             assert.deepEqual [], r.rows
-            # assert.deepEqual [id], r.affected_rows
-            # assert.deepEqual 1, r.num_affected_rows
+            assert.deepEqual [id], r.affected_rows
+            assert.deepEqual 1, r.num_affected_rows
             assert.deepEqual null, r.last_inserted_id
             @query.prepare 'select dummy_int8 from dummy where id = ?', (s) ->
               s.execute {0: id}, (r) ->
