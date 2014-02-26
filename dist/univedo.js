@@ -22,7 +22,9 @@ for (i = _i = 0; _i <= 255; i = ++_i) {
   hexToByte[byteToHex[i]] = i;
 }
 
-raw2Uuid = function(buf) {
+raw2Uuid = function(raw) {
+  var buf;
+  buf = new Uint8Array(raw);
   i = 0;
   return byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]] + byteToHex[buf[i++]];
 };

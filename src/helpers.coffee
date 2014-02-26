@@ -6,7 +6,8 @@ for i in [0..255]
   hexToByte[byteToHex[i]] = i
 
 # ArrayBuffer raw uuid -> UUID as string
-raw2Uuid = (buf) ->
+raw2Uuid = (raw) ->
+  buf = new Uint8Array(raw)
   i = 0
   byteToHex[buf[i++]] + byteToHex[buf[i++]] +
   byteToHex[buf[i++]] + byteToHex[buf[i++]] + '-' +
