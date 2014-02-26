@@ -36,8 +36,8 @@ gulp.task('src', ['lint'], function () {
   return gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
-    .pipe(header('(function(univedo) {\n'))
-    .pipe(footer('})(typeof exports !== "undefined" && exports !== null ? exports : this);'))
+    .pipe(header('(function(exports) {\n'))
+    .pipe(footer('exports.univedo = univedo;\n})(typeof exports !== "undefined" && exports !== null ? exports : this);'))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist/'));
 });

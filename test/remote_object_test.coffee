@@ -1,4 +1,4 @@
-univedo = require '../dist/univedo.js'
+univedo = require('../dist/univedo.js').univedo
 assert = require 'assert'
 
 describe 'remote object', ->

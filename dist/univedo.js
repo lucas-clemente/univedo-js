@@ -3,9 +3,13 @@
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
-(function(univedo) {
+(function(exports) {
 "use strict";
-univedo.remote_classes = {};
+var univedo;
+
+univedo = {
+  remote_classes: {}
+};
 
 var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, decodeUtf8, encodeUtf8, hexToByte, i, raw2Uuid, _i;
 
@@ -559,4 +563,5 @@ univedo.Session = Session = (function() {
   return Session;
 
 })();
+exports.univedo = univedo;
 })(typeof exports !== "undefined" && exports !== null ? exports : this);
