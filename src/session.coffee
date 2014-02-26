@@ -7,7 +7,7 @@ univedo.Session = class Session
       @_urologin = new univedo.RemoteObject(this, 0, ['getSession'])
       @_urologin.getSession opts, (conn) =>
         @_connection = conn
-        @onopen()
+        @onopen(this)
     @_socket.onmessage = @_onmessage
     @_socket.onerror = @_onerror
     @_socket.onclose = @_onclose

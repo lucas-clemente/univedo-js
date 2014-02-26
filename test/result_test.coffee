@@ -7,8 +7,8 @@ OPTS =
 
 describe 'Result', ->
   beforeEach (done) ->
-    @session = new univedo.Session URL, OPTS, =>
-      @session.getPerspective 'cefb4ed2-4ce3-4825-8550-b68a3c142f0a', (p) =>
+    @session = new univedo.Session URL, OPTS, (s) =>
+      s.getPerspective 'cefb4ed2-4ce3-4825-8550-b68a3c142f0a', (p) =>
         p.query (q) =>
           @query = q
           done()

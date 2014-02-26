@@ -503,7 +503,7 @@ univedo.Session = Session = (function() {
         _this._urologin = new univedo.RemoteObject(_this, 0, ['getSession']);
         return _this._urologin.getSession(opts, function(conn) {
           _this._connection = conn;
-          return _this.onopen();
+          return _this.onopen(_this);
         });
       };
     })(this);

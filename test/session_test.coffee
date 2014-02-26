@@ -7,7 +7,8 @@ OPTS =
 
 describe 'Session', ->
   beforeEach (done) ->
-    @session = new univedo.Session URL, OPTS, done
+    @session = new univedo.Session URL, OPTS, ->
+      done()
 
   afterEach ->
     @session.close() if @session._socket.readyState == 1
