@@ -531,7 +531,7 @@ univedo.Session = Session = (function() {
 
   Session.prototype._onmessage = function(e) {
     var msg;
-    msg = new univedo.Message(new Uint8Array(e.data).buffer, this._receiveRo);
+    msg = new univedo.Message(new Uint8Array(e.data, 0, e.data.byteLength).buffer, this._receiveRo);
     return this._remote_objects[msg.shift()]._receive(msg);
   };
 

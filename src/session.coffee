@@ -28,7 +28,10 @@ univedo.Session = class Session
   _onmessage: (e) =>
     # This is unneccessary in the browser. However node's ws returns a Buffer
     # instead of an ArrayBuffer, which is normalized to an ArrayBuffer here.
-    msg = new univedo.Message(new Uint8Array(e.data).buffer, @_receiveRo)
+    msg = new univedo.Message(
+      new Uint8Array(e.data, 0, e.data.byteLength).buffer,
+      @_receiveRo
+    )
     @_remote_objects[msg.shift()]._receive(msg)
 
   _receiveRo: (arr) =>
