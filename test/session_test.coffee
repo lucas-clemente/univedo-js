@@ -1,5 +1,4 @@
-requirejs = require 'requirejs'
-univedo = requirejs('dist/univedo.js')
+univedo = require '../dist/univedo.js'
 assert = require 'assert'
 
 URL = "ws://localhost:9000/f8018f09-fb75-4d3d-8e11-44b2dc796130"

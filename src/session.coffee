@@ -1,6 +1,8 @@
+Ws = if WebSocket? then WebSocket else require 'ws'
+
 univedo.Session = class Session
   constructor: (url, opts, @onopen = (->), @onclose = (->), @onerror = (->)) ->
-    @_socket = new ws(url)
+    @_socket = new Ws(url)
     @_socket.onopen = =>
       @_urologin = new univedo.RemoteObject(this, 0, ['getSession'])
       @_urologin.getSession opts, (conn) =>

@@ -4,12 +4,12 @@ var coffee = require('gulp-coffee');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
-var wrap = require('gulp-wrap-amd');
 var coffeelint = require('gulp-coffeelint');
 var mocha = require('gulp-spawn-mocha');
 var gzip = require('gulp-gzip');
 var size = require('gulp-size');
 var header = require('gulp-header');
+var footer = require('gulp-footer');
 
 var paths = {
   scripts: 'src/*.coffee',
@@ -36,11 +36,8 @@ gulp.task('src', ['lint'], function () {
   return gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
-    .pipe(wrap({
-      deps: ["ws"],
-      params: ["ws"],
-      exports: 'univedo'
-    }))
+    .pipe(header('(function(univedo) {\n'))
+    .pipe(footer('})(typeof exports !== "undefined" && exports !== null ? exports : this);'))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist/'));
 });

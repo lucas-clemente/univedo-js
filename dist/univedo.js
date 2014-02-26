@@ -3,14 +3,9 @@
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
-define(["ws"],function(ws){
-
+(function(univedo) {
 "use strict";
-var univedo;
-
-univedo = {
-  remote_classes: {}
-};
+univedo.remote_classes = {};
 
 var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, decodeUtf8, encodeUtf8, hexToByte, i, raw2Uuid, _i;
 
@@ -484,8 +479,10 @@ Result = (function(_super) {
 
 univedo.remote_classes['com.univedo.result'] = Result;
 
-var Session,
+var Session, Ws,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+Ws = typeof WebSocket !== "undefined" && WebSocket !== null ? WebSocket : require('ws');
 
 univedo.Session = Session = (function() {
   function Session(url, opts, onopen, onclose, onerror) {
@@ -496,7 +493,7 @@ univedo.Session = Session = (function() {
     this._receiveRo = __bind(this._receiveRo, this);
     this._onmessage = __bind(this._onmessage, this);
     this._onclose = __bind(this._onclose, this);
-    this._socket = new ws(url);
+    this._socket = new Ws(url);
     this._socket.onopen = (function(_this) {
       return function() {
         _this._urologin = new univedo.RemoteObject(_this, 0, ['getSession']);
@@ -562,7 +559,4 @@ univedo.Session = Session = (function() {
   return Session;
 
 })();
-
-return univedo;
-
-});
+})(typeof exports !== "undefined" && exports !== null ? exports : this);

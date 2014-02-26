@@ -1,3 +1,2 @@
 "use strict"
-univedo =
-  remote_classes: {}
+univedo.remote_classes = {}
