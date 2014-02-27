@@ -3,15 +3,13 @@
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
-(function(exports) {
-"use strict";
-var univedo;
+(function(exports, WebSocket, Promise) {
+  "use strict";
+  var univedo = {
+    "remote_classes": {}
+  };
 
-univedo = {
-  remote_classes: {}
-};
-
-var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, decodeUtf8, encodeUtf8, hexToByte, i, raw2Uuid, _i;
+  var byteArrayFromArray, byteArrayFromString, byteToHex, concatArrayBufs, decodeUtf8, encodeUtf8, hexToByte, i, raw2Uuid, _i;
 
 byteToHex = [];
 
@@ -312,10 +310,14 @@ univedo.RemoteObject = RemoteObject = (function() {
     this._addROMs(method_names);
   }
 
-  RemoteObject.prototype._callRom = function(name, args, onreturn) {
-    this.session._sendMessage([this.id, ROMOPS.CALL, this.call_id, name, args]);
-    this.calls[this.call_id] = onreturn;
-    return this.call_id += 1;
+  RemoteObject.prototype._callRom = function(name, args) {
+    return new Promise((function(_this) {
+      return function(resolve, reject) {
+        _this.session._sendMessage([_this.id, ROMOPS.CALL, _this.call_id, name, args]);
+        _this.calls[_this.call_id] = resolve;
+        return _this.call_id += 1;
+      };
+    })(this));
   };
 
   RemoteObject.prototype._sendNotification = function(name, args) {
@@ -366,10 +368,9 @@ univedo.RemoteObject = RemoteObject = (function() {
       rom = rom_names[_i];
       _results.push(this[rom] = (function(rom) {
         return function() {
-          var args, cb;
+          var args;
           args = Array.prototype.slice.call(arguments, 0);
-          cb = args.pop();
-          return this._callRom(rom, args, cb);
+          return this._callRom(rom, args);
         };
       })(rom));
     }
@@ -430,15 +431,13 @@ Statement = (function(_super) {
     Statement.__super__.constructor.call(this, session, id);
   }
 
-  Statement.prototype.execute = function(binds, cb) {
-    if (!cb) {
-      cb = binds;
-      binds = {};
-    }
-    return this._callRom('execute', [binds], function(result) {
-      return result._oncomplete = function() {
-        return cb(result);
-      };
+  Statement.prototype.execute = function(binds) {
+    var args;
+    args = binds ? [binds] : [];
+    return this._callRom('execute', args).then(function(result) {
+      return new Promise(function(resolve, reject) {
+        return result._oncomplete = resolve;
+      });
     });
   };
 
@@ -459,7 +458,7 @@ Result = (function(_super) {
       return this.rows.push(row);
     });
     this._on('setComplete', function() {
-      return this._oncomplete();
+      return this._oncomplete(this);
     });
     this.affected_rows = null;
     this.num_affected_rows = null;
@@ -477,7 +476,7 @@ Result = (function(_super) {
     throw Error(msg);
   };
 
-  Result.prototype._oncomplete = function() {};
+  Result.prototype._oncomplete = function(res) {};
 
   return Result;
 
@@ -485,10 +484,8 @@ Result = (function(_super) {
 
 univedo.remote_classes['com.univedo.result'] = Result;
 
-var Session, Ws,
+var Session,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-Ws = typeof WebSocket !== "undefined" && WebSocket !== null ? WebSocket : require('ws');
 
 univedo.Session = Session = (function() {
   function Session(url, opts, onopen, onclose, onerror) {
@@ -499,12 +496,12 @@ univedo.Session = Session = (function() {
     this._receiveRo = __bind(this._receiveRo, this);
     this._onmessage = __bind(this._onmessage, this);
     this._onclose = __bind(this._onclose, this);
-    this._socket = new Ws(url);
+    this._socket = new WebSocket(url);
     this._socket.binaryType = "arraybuffer";
     this._socket.onopen = (function(_this) {
       return function() {
         _this._urologin = new univedo.RemoteObject(_this, 0, ['getSession']);
-        return _this._urologin.getSession(opts, function(conn) {
+        return _this._urologin.getSession(opts).then(function(conn) {
           _this._connection = conn;
           return _this.onopen(_this);
         });
@@ -520,12 +517,12 @@ univedo.Session = Session = (function() {
     return this._socket.close();
   };
 
-  Session.prototype.ping = function(v, onreturn) {
-    return this._connection.ping(v, onreturn);
+  Session.prototype.ping = function(v) {
+    return this._connection.ping(v);
   };
 
-  Session.prototype.getPerspective = function(uuid, onreturn) {
-    return this._connection.getPerspective(uuid, onreturn);
+  Session.prototype.getPerspective = function(uuid) {
+    return this._connection.getPerspective(uuid);
   };
 
   Session.prototype._onclose = function(e) {
@@ -566,5 +563,11 @@ univedo.Session = Session = (function() {
   return Session;
 
 })();
-exports.univedo = univedo;
-})(typeof exports !== "undefined" && exports !== null ? exports : this);
+
+
+  exports.univedo = univedo;
+})(
+  typeof exports !== "undefined" && exports !== null ? exports : this,
+  typeof WebSocket !== "undefined" && WebSocket !== null ? WebSocket : require("ws"),
+  typeof Promise !== "undefined" && Promise !== null ? Promise : require("es6-promise").Promise
+);

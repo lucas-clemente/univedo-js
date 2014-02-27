@@ -12,10 +12,11 @@ univedo.RemoteObject = class RemoteObject
     @session._remote_objects[@id] = this
     @_addROMs method_names
 
-  _callRom: (name, args, onreturn) ->
-    @session._sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
-    @calls[@call_id] = onreturn
-    @call_id += 1
+  _callRom: (name, args) ->
+    new Promise (resolve, reject) =>
+      @session._sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
+      @calls[@call_id] = resolve
+      @call_id += 1
 
   _sendNotification: (name, args) ->
     @session._sendMessage([@id, ROMOPS.NOTIFY, name, args])
@@ -53,6 +54,5 @@ univedo.RemoteObject = class RemoteObject
       this[rom] = ((rom) ->
         ->
           args = Array.prototype.slice.call(arguments, 0)
-          cb = args.pop()
-          @_callRom rom, args, cb
+          @_callRom rom, args
       )(rom)

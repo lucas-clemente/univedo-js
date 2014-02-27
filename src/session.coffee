@@ -1,12 +1,11 @@
-Ws = if WebSocket? then WebSocket else require 'ws'
-
 univedo.Session = class Session
   constructor: (url, opts, @onopen = (->), @onclose = (->), @onerror = (->)) ->
-    @_socket = new Ws(url)
+    @_socket = new WebSocket(url)
     @_socket.binaryType = "arraybuffer"
     @_socket.onopen = =>
       @_urologin = new univedo.RemoteObject(this, 0, ['getSession'])
-      @_urologin.getSession opts, (conn) =>
+      @_urologin.getSession opts
+      .then (conn) =>
         @_connection = conn
         @onopen(this)
     @_socket.onmessage = @_onmessage
@@ -17,11 +16,11 @@ univedo.Session = class Session
   close: ->
     @_socket.close()
 
-  ping: (v, onreturn) ->
-    @_connection.ping(v, onreturn)
+  ping: (v) ->
+    @_connection.ping(v)
 
-  getPerspective: (uuid, onreturn) ->
-    @_connection.getPerspective(uuid, onreturn)
+  getPerspective: (uuid) ->
+    @_connection.getPerspective(uuid)
 
   _onclose: (e) =>
     @onclose()

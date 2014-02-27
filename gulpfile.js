@@ -9,7 +9,7 @@ var mocha = require('gulp-spawn-mocha');
 var gzip = require('gulp-gzip');
 var size = require('gulp-size');
 var header = require('gulp-header');
-var footer = require('gulp-footer');
+var wrap = require("gulp-wrap");
 
 var paths = {
   scripts: 'src/*.coffee',
@@ -36,8 +36,7 @@ gulp.task('src', ['lint'], function () {
   return gulp.src(paths.scripts)
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(concat('univedo.js'))
-    .pipe(header('(function(exports) {\n'))
-    .pipe(footer('exports.univedo = univedo;\n})(typeof exports !== "undefined" && exports !== null ? exports : this);'))
+    .pipe(wrap({src: 'wrap.js'}))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist/'));
 });

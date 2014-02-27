@@ -19,9 +19,10 @@ describe 'Session', ->
 
   pingTest = (name, value) ->
     it 'pings ' + name, (done) ->
-      @session.ping value, (r) ->
-        assert.deepEqual value, r
-        done()
+      @session.ping value
+        .then (r) ->
+          assert.deepEqual value, r
+          done()
 
   pingTest 'null', null
   pingTest 'true', true
@@ -35,6 +36,7 @@ describe 'Session', ->
   pingTest 'times', new Date(1363896240)
 
   it 'gets perspectives', (done) ->
-    @session.getPerspective '6e5a3a08-9bb0-4d92-ad04-7c6fed3874fa', (p) ->
-      assert.equal p.constructor.name, "Perspective"
-      done()
+    @session.getPerspective '6e5a3a08-9bb0-4d92-ad04-7c6fed3874fa'
+      .then (p) ->
+        assert.equal p.constructor.name, "Perspective"
+        done()
