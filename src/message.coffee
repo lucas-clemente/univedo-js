@@ -122,6 +122,8 @@ univedo.Message = class Message
 
   _sendImpl: (obj) ->
     switch
+      when typeof obj == 'undefined'
+        throw Error "cannot send undefined"
       when obj == null then @_sendSimple(CborSimple.NULL)
       when obj == true then @_sendSimple(CborSimple.TRUE)
       when obj == false then @_sendSimple(CborSimple.FALSE)

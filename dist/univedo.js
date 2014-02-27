@@ -237,6 +237,9 @@ univedo.Message = Message = (function() {
   Message.prototype._sendImpl = function(obj) {
     var ba, bufs, key, keys, utf8, v, _i, _j, _len, _len1;
     switch (false) {
+      case typeof obj !== 'undefined':
+        throw Error("cannot send undefined");
+        break;
       case obj !== null:
         return this._sendSimple(CborSimple.NULL);
       case obj !== true:
