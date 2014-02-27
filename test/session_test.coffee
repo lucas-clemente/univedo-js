@@ -20,9 +20,9 @@ describe 'Session', ->
   pingTest = (name, value) ->
     it 'pings ' + name, (done) ->
       @session.ping value
-        .then (r) ->
-          assert.deepEqual value, r
-          done()
+      .then (r) ->
+        assert.deepEqual value, r
+        done()
 
   pingTest 'null', null
   pingTest 'true', true
@@ -37,6 +37,6 @@ describe 'Session', ->
 
   it 'gets perspectives', (done) ->
     @session.getPerspective '6e5a3a08-9bb0-4d92-ad04-7c6fed3874fa'
-      .then (p) ->
-        assert.equal p.constructor.name, "Perspective"
-        done()
+    .then (p) ->
+      assert.equal p.constructor.name, "Perspective"
+      done()

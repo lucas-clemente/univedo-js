@@ -15,39 +15,30 @@ univedo.remote_classes['com.univedo.query'] = Query
 
 class Statement extends univedo.RemoteObject
   constructor: (session, id) ->
-    super(session, id)
-
-  execute: (binds) ->
-    args = if binds then [binds] else []
-    @_callRom 'execute', args
-    .then (result) ->
-      new Promise (resolve, reject) ->
-        result._oncomplete = resolve
+    super(session, id, ['execute'])
 univedo.remote_classes['com.univedo.statement'] = Statement
 
 class Result extends univedo.RemoteObject
+  # TODO error handling
   constructor: (session, id) ->
     super(session, id)
     @_on 'setError', @_onerror
     # SELECT
-    @rows = []
-    @_on 'appendRow', (row) ->
-      @rows.push(row)
-    @_on 'setComplete', ->
-      @_oncomplete(this)
+    @_rows = []
+    @rows = new Promise (resolve, reject) =>
+      @_on 'appendRow', (row) ->
+        @_rows.push(row)
+      @_on 'setComplete', ->
+        resolve(@_rows)
     # UPDATE, DELETE, LINK
-    @affected_rows = null
-    @num_affected_rows = null
-    @_on 'setAffectedRecords', (r) ->
-      @affected_rows = r
-      @num_affected_rows = @affected_rows.length
+    @affected_rows = new Promise (resolve, reject) =>
+      @_on 'setAffectedRecords', (records) ->
+        resolve(records)
     # INSERT
-    @last_inserted_id = null
-    @_on 'setRecord', (r) ->
-      @last_inserted_id = r
+    @last_inserted_id = new Promise (resolve, reject) =>
+      @_on 'setRecord', (r) ->
+        resolve(r)
 
   _onerror: (msg) ->
     throw Error msg
-  _oncomplete: (res) ->
-
 univedo.remote_classes['com.univedo.result'] = Result

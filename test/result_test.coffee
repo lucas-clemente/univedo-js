@@ -23,10 +23,9 @@ describe 'Result', ->
     .then (s) ->
       s.execute()
     .then (r) ->
-      assert r.rows[0][0] > 0
-      assert.deepEqual null, r.affected_rows
-      assert.deepEqual null, r.num_affected_rows
-      assert.deepEqual null, r.last_inserted_id
+      r.rows
+    .then (rows) ->
+      assert rows[0][0] > 0
       done()
 
   it 'runs inserts', (done) ->
@@ -34,42 +33,46 @@ describe 'Result', ->
     .then (s) ->
       s.execute()
     .then (r) ->
-      assert.deepEqual [], r.rows
-      assert.deepEqual null, r.affected_rows
-      assert.deepEqual null, r.num_affected_rows
-      assert r.last_inserted_id >= 0
+      r.last_inserted_id
+    .then (id) ->
+      assert id >= 0
       done()
 
   it 'runs inserts with binds', (done) ->
     @query.prepare 'insert into dummy (dummy_int8) values (?)'
     .then (s) ->
       s.execute {0: 42}
-    .then (r) =>
-      id = r.last_inserted_id
+    .then (r) ->
+      r.last_inserted_id
+    .then (id) =>
       @query.prepare 'select dummy_int8 from dummy where id = ?'
       .then (s) ->
         s.execute {0: id}
       .then (r) ->
-        assert.deepEqual [[42]], r.rows
+        r.rows
+      .then (rows) ->
+        assert.deepEqual [[42]], rows
         done()
 
   it 'runs updates', (done) ->
     @query.prepare 'insert into dummy (dummy_int8) values (23)'
     .then (s) ->
       s.execute()
-    .then (r) =>
-      id = r.last_inserted_id
+    .then (r) ->
+      r.last_inserted_id
+    .then (id) =>
       @query.prepare 'update dummy set dummy_int8 = 42 where id = ?'
       .then (s) ->
         s.execute {0: id}
-      .then (r) =>
-        assert.deepEqual [], r.rows
-        assert.deepEqual [id], r.affected_rows
-        assert.deepEqual 1, r.num_affected_rows
-        assert.deepEqual null, r.last_inserted_id
+      .then (r) ->
+        r.affected_rows
+      .then (affected) =>
+        assert.deepEqual [id], affected
         @query.prepare 'select dummy_int8 from dummy where id = ?'
         .then (s) ->
           s.execute {0: id}
         .then (r) ->
-          assert.deepEqual [[42]], r.rows
+          r.rows
+        .then (rows) ->
+          assert.deepEqual [[42]], rows
           done()

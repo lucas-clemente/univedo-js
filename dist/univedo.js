@@ -430,18 +430,8 @@ Statement = (function(_super) {
   __extends(Statement, _super);
 
   function Statement(session, id) {
-    Statement.__super__.constructor.call(this, session, id);
+    Statement.__super__.constructor.call(this, session, id, ['execute']);
   }
-
-  Statement.prototype.execute = function(binds) {
-    var args;
-    args = binds ? [binds] : [];
-    return this._callRom('execute', args).then(function(result) {
-      return new Promise(function(resolve, reject) {
-        return result._oncomplete = resolve;
-      });
-    });
-  };
 
   return Statement;
 
@@ -455,30 +445,36 @@ Result = (function(_super) {
   function Result(session, id) {
     Result.__super__.constructor.call(this, session, id);
     this._on('setError', this._onerror);
-    this.rows = [];
-    this._on('appendRow', function(row) {
-      return this.rows.push(row);
-    });
-    this._on('setComplete', function() {
-      return this._oncomplete(this);
-    });
-    this.affected_rows = null;
-    this.num_affected_rows = null;
-    this._on('setAffectedRecords', function(r) {
-      this.affected_rows = r;
-      return this.num_affected_rows = this.affected_rows.length;
-    });
-    this.last_inserted_id = null;
-    this._on('setRecord', function(r) {
-      return this.last_inserted_id = r;
-    });
+    this._rows = [];
+    this.rows = new Promise((function(_this) {
+      return function(resolve, reject) {
+        _this._on('appendRow', function(row) {
+          return this._rows.push(row);
+        });
+        return _this._on('setComplete', function() {
+          return resolve(this._rows);
+        });
+      };
+    })(this));
+    this.affected_rows = new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this._on('setAffectedRecords', function(records) {
+          return resolve(records);
+        });
+      };
+    })(this));
+    this.last_inserted_id = new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this._on('setRecord', function(r) {
+          return resolve(r);
+        });
+      };
+    })(this));
   }
 
   Result.prototype._onerror = function(msg) {
     throw Error(msg);
   };
-
-  Result.prototype._oncomplete = function(res) {};
 
   return Result;
 
