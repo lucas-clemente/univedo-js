@@ -15,7 +15,9 @@ univedo.RemoteObject = class RemoteObject
   _callRom: (name, args) ->
     new Promise (resolve, reject) =>
       @session._sendMessage([@id, ROMOPS.CALL, @call_id, name, args])
-      @calls[@call_id] = resolve
+      @calls[@call_id] =
+        success: resolve
+        fail: reject
       @call_id += 1
 
   _sendNotification: (name, args) ->
@@ -30,11 +32,10 @@ univedo.RemoteObject = class RemoteObject
         switch status
           when 0
             result = message.shift()
-            @calls[call_id](result)
+            @calls[call_id].success(result)
             @calls[call_id] = null
           when 2
-            # TODO proper error handling
-            throw Error message.shift()
+            @calls[call_id].fail(message.shift())
           else
             throw Error "unknown rom answer status " + status
       when ROMOPS.NOTIFY

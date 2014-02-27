@@ -38,6 +38,14 @@ describe 'remote object', ->
         done()
     ro._receive([2, 0, 0, 42])
 
+  it 'returns errors from roms', (done) ->
+    ro = new univedo.RemoteObject(@session, 2)
+    ro._callRom "foo", []
+      .catch (err) ->
+        assert.deepEqual("catastrophic error", err)
+        done()
+    ro._receive([2, 0, 2, "catastrophic error"])
+
   it 'receives notifications', (done) ->
     ro = new univedo.RemoteObject(@session, 2)
     ro._on 'foo', ->

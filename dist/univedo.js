@@ -314,7 +314,10 @@ univedo.RemoteObject = RemoteObject = (function() {
     return new Promise((function(_this) {
       return function(resolve, reject) {
         _this.session._sendMessage([_this.id, ROMOPS.CALL, _this.call_id, name, args]);
-        _this.calls[_this.call_id] = resolve;
+        _this.calls[_this.call_id] = {
+          success: resolve,
+          fail: reject
+        };
         return _this.call_id += 1;
       };
     })(this));
@@ -334,11 +337,10 @@ univedo.RemoteObject = RemoteObject = (function() {
         switch (status) {
           case 0:
             result = message.shift();
-            this.calls[call_id](result);
+            this.calls[call_id].success(result);
             return this.calls[call_id] = null;
           case 2:
-            throw Error(message.shift());
-            break;
+            return this.calls[call_id].fail(message.shift());
           default:
             throw Error("unknown rom answer status " + status);
         }
