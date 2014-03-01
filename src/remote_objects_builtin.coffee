@@ -15,7 +15,7 @@ univedo.remote_classes['com.univedo.query'] = Query
 
 class Statement extends univedo.RemoteObject
   constructor: (session, id) ->
-    super(session, id, ['execute'])
+    super(session, id, ['execute', 'getColumnNames', 'getColumnTypes'])
 univedo.remote_classes['com.univedo.statement'] = Statement
 
 class Result extends univedo.RemoteObject

@@ -433,7 +433,7 @@ Statement = (function(_super) {
   __extends(Statement, _super);
 
   function Statement(session, id) {
-    Statement.__super__.constructor.call(this, session, id, ['execute']);
+    Statement.__super__.constructor.call(this, session, id, ['execute', 'getColumnNames', 'getColumnTypes']);
   }
 
   return Statement;
