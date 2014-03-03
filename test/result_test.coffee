@@ -17,6 +17,14 @@ describe 'Result', ->
   afterEach ->
     @session.close()
 
+  it 'runs empty selects', (done) ->
+    @query.prepare "select * from dummy where dummy_uuid = 'foo'"
+      .then (s) -> s.execute()
+      .then (r) -> r.rows
+      .then (rows) ->
+        assert.deepEqual rows, []
+        done()
+
   it 'runs selects', (done) ->
     @query.prepare 'select count(*) from fields_inclusive'
     .then (s) -> s.execute()
