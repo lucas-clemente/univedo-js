@@ -69,3 +69,10 @@ describe 'Result', ->
         .then (rows) ->
           assert.deepEqual [[42]], rows
           done()
+
+  it 'runs searches', (done) ->
+    @session._connection._callRom('searchCard', ['4C4BE7D0-6E93-42D4-BF40-92CFBE7391AD'])
+    .then (r) -> r.rows
+    .then (rows) ->
+      assert.deepEqual [], rows
+      done()
