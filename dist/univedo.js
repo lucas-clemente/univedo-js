@@ -394,7 +394,7 @@ Connection = (function(_super) {
   __extends(Connection, _super);
 
   function Connection(session, id) {
-    Connection.__super__.constructor.call(this, session, id, ['ping', 'getPerspective']);
+    Connection.__super__.constructor.call(this, session, id, ['ping', 'getPerspective', 'applyUts']);
   }
 
   return Connection;
@@ -524,6 +524,10 @@ univedo.Session = Session = (function() {
 
   Session.prototype.getPerspective = function(uuid) {
     return this._connection.getPerspective(uuid);
+  };
+
+  Session.prototype.applyUts = function(uts) {
+    return this._connection.applyUts(uts);
   };
 
   Session.prototype._onclose = function(e) {

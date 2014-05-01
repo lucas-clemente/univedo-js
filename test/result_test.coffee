@@ -1,14 +1,17 @@
 univedo = require('../dist/univedo.js').univedo
 assert = require 'assert'
 
-URL = "ws://localhost:9000/f8018f09-fb75-4d3d-8e11-44b2dc796130"
+URL = "ws://vagrant:80/f8018f09-fb75-4d3d-8e11-44b2dc796130"
 OPTS =
   9744: "marvin"
+testUts = require('fs').readFileSync("Test Perspective.xml", "utf8")
 
 describe 'Result', ->
   beforeEach (done) ->
     @session = new univedo.Session URL, OPTS, (s) =>
-      s.getPerspective 'cefb4ed2-4ce3-4825-8550-b68a3c142f0a'
+      s.applyUts testUts
+      .then ->
+        s.getPerspective 'cefb4ed2-4ce3-4825-8550-b68a3c142f0a'
       .then (p) -> p.query()
       .then (q) =>
         @query = q

@@ -22,6 +22,9 @@ univedo.Session = class Session
   getPerspective: (uuid) ->
     @_connection.getPerspective(uuid)
 
+  applyUts: (uts) ->
+    @_connection.applyUts(uts)
+
   _onclose: (e) =>
     @onclose()
 

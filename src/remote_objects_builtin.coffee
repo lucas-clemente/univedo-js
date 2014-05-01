@@ -1,6 +1,6 @@
 class Connection extends univedo.RemoteObject
   constructor: (session, id) ->
-    super(session, id, ['ping', 'getPerspective'])
+    super(session, id, ['ping', 'getPerspective', 'applyUts'])
 univedo.remote_classes['com.univedo.connection'] = Connection
 
 class Perspective extends univedo.RemoteObject
