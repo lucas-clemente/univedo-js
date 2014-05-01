@@ -41,7 +41,8 @@ univedo.Session = class Session
     ro = new klass(this, id)
 
   _onerror: (e) =>
-    console.error "error " + e
+    console.error "error in websocket"
+    console.error e
     @onerror()
 
   _sendMessage: (m) ->

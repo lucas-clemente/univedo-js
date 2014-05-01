@@ -551,7 +551,8 @@ univedo.Session = Session = (function() {
   };
 
   Session.prototype._onerror = function(e) {
-    console.error("error " + e);
+    console.error("error in websocket");
+    console.error(e);
     return this.onerror();
   };
 
