@@ -13,7 +13,7 @@ CborTag =
   TIME: 1
   DECIMAL: 4
   REMOTEOBJECT: 260
-  UUID: 261
+  UUID: 37
   RECORD: 262
 
 CborSimple =
