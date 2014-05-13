@@ -138,7 +138,7 @@ univedo.Message = Message = (function() {
   };
 
   Message.prototype.shift = function() {
-    var i, len, major, obj, tag, typeInt, _i, _j, _results;
+    var i, key, len, major, obj, tag, typeInt, _i, _j, _results;
     typeInt = this._getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -180,7 +180,8 @@ univedo.Message = Message = (function() {
         len = this._getLen(typeInt);
         obj = {};
         for (i = _j = 0; 0 <= len ? _j < len : _j > len; i = 0 <= len ? ++_j : --_j) {
-          obj[this.shift()] = this.shift();
+          key = this.shift();
+          obj[key] = this.shift();
         }
         return obj;
       case CborMajor.TAG:

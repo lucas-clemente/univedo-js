@@ -78,7 +78,8 @@ univedo.Message = class Message
         len = @_getLen(typeInt)
         obj = {}
         for i in [0...len]
-          obj[@shift()] = @shift()
+          key = @shift()
+          obj[key] = @shift()
         obj
       when CborMajor.TAG
         tag = @_getLen(typeInt)
