@@ -37,17 +37,16 @@ describe 'cbor', ->
 
   it 'reads times', ->
     assert.deepEqual new univedo.Message("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a".b()).shift(), new Date("2013-03-21T20:04:00Z"), 'reads datetimes'
-    assert.deepEqual new univedo.Message("\xc1\x1a\x51\x4b\x67\xb0".b()).shift(), new Date(1363896240), 'reads times'
 
   it 'reads uuids', ->
-    assert.equal new univedo.Message("\xc7\x50\x68\x4E\xF8\x95\x72\xA2\x42\x98\xBC\x5B\x58\x0F\x1C\x1D\x27\x07".b()).shift(), "684ef895-72a2-4298-bc5b-580f1c1d2707", 'reads uuids'
+    assert.equal new univedo.Message("\xd8\x25\x50\xD5\x06\x81\xAE\xB2\xC1\x49\x4B\xB2\x6E\x7F\xA4\xF7\xEE\x61\x37".b()).shift(), "d50681ae-b2c1-494b-b26e-7fa4f7ee6137", 'reads uuids'
 
   it 'reads records', ->
-    assert.equal new univedo.Message("\xc8\x18\x2a".b()).shift(), 42, 'reads record'
+    assert.equal new univedo.Message("\xd8\x26\x18\x2a".b()).shift(), 42, 'reads record'
 
   it 'reads remote objects', ->
     ro_callback = (arr) -> arr
-    assert.deepEqual new univedo.Message("\xc6\x82\x63foo\x63bar".b(), ro_callback).shift(), ["foo", "bar"]
+    assert.deepEqual new univedo.Message("\xd8\x1b\x82\x70\x63om.univedo.test\x18\x2a".b(), ro_callback).shift(), ["com.univedo.test", 42]
 
   it 'sends simple', ->
     assert.deepEqual new univedo.Message().send(null), "\xf6".b(), 'sends null'

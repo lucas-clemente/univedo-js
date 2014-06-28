@@ -10,11 +10,9 @@ CborMajor =
 
 CborTag =
   DATETIME: 0
-  TIME: 1
-  DECIMAL: 4
-  REMOTEOBJECT: 6
-  UUID: 7
-  RECORD: 8
+  REMOTEOBJECT: 27
+  UUID: 37
+  RECORD: 38
 
 CborSimple =
   FALSE: 20
@@ -85,7 +83,6 @@ univedo.Message = class Message
         tag = @_getLen(typeInt)
         switch tag
           when CborTag.DATETIME then new Date(@shift())
-          when CborTag.TIME then new Date(@shift())
           when CborTag.UUID
             raw2Uuid(@shift())
           when CborTag.RECORD then @shift()
