@@ -88,7 +88,7 @@ univedo.Message = class Message
           when CborTag.RECORD then @shift()
           when CborTag.REMOTEOBJECT
             @roCallback(@shift())
-          else throw Error "invalid tag in cbor protocol"
+          else throw Error "invalid tag in cbor protocol: " + tag
       else throw Error "invalid major in cbor protocol"
 
 
@@ -165,4 +165,4 @@ univedo.Message = class Message
           @_sendTag(CborTag.DATETIME),
           @_sendImpl(obj.toISOString())
         ])
-      else throw Error "unsupported object in cbor protocol"
+      else throw Error "unsupported object in cbor protocol: " + obj

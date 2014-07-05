@@ -1,5 +1,5 @@
 /**
- * univedo v0.1.1 
+ * univedo v0.1.2 
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
@@ -194,7 +194,7 @@ univedo.Message = Message = (function() {
           case CborTag.REMOTEOBJECT:
             return this.roCallback(this.shift());
           default:
-            throw Error("invalid tag in cbor protocol");
+            throw Error("invalid tag in cbor protocol: " + tag);
         }
         break;
       default:
@@ -279,7 +279,7 @@ univedo.Message = Message = (function() {
       case obj.constructor.name !== "Date":
         return concatArrayBufs([this._sendTag(CborTag.DATETIME), this._sendImpl(obj.toISOString())]);
       default:
-        throw Error("unsupported object in cbor protocol");
+        throw Error("unsupported object in cbor protocol: " + obj);
     }
   };
 
