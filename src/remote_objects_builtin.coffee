@@ -16,10 +16,15 @@ univedo.remote_classes['com.univedo.query'] = Query
 class Statement extends univedo.RemoteObject
   constructor: (session, id) ->
     super(session, id)
-    @_on 'setColumnNames', ->
+    @_columnNames = new Promise (resolve, reject) =>
+      @_on 'setColumnNames', (cols)->
+        resolve(cols)
 
   execute: (binds = {}) ->
     @_callRom("execute", [binds])
+
+  getColumnNames: ->
+    @_columnNames
 univedo.remote_classes['com.univedo.statement'] = Statement
 
 class Result extends univedo.RemoteObject

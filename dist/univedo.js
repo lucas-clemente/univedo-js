@@ -1,5 +1,5 @@
 /**
- * univedo v0.1.2 
+ * univedo v0.1.3 
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
@@ -431,7 +431,13 @@ Statement = (function(_super) {
 
   function Statement(session, id) {
     Statement.__super__.constructor.call(this, session, id);
-    this._on('setColumnNames', function() {});
+    this._columnNames = new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this._on('setColumnNames', function(cols) {
+          return resolve(cols);
+        });
+      };
+    })(this));
   }
 
   Statement.prototype.execute = function(binds) {
@@ -439,6 +445,10 @@ Statement = (function(_super) {
       binds = {};
     }
     return this._callRom("execute", [binds]);
+  };
+
+  Statement.prototype.getColumnNames = function() {
+    return this._columnNames;
   };
 
   return Statement;
