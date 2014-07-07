@@ -1,9 +1,9 @@
 univedo = require('../dist/univedo.js').univedo
 assert = require 'assert'
 
-URL = "ws://vagrant:80/f8018f09-fb75-4d3d-8e11-44b2dc796130"
+URL = "ws://vagrant/f8018f09-fb75-4d3d-8e11-44b2dc796130"
 OPTS =
-  9744: "marvin"
+  username: "marvin"
 testUts = require('fs').readFileSync("Test Perspective.xml", "utf8")
 
 describe 'Result', ->
@@ -63,9 +63,9 @@ describe 'Result', ->
     .then (id) =>
       @query.prepare 'update dummy set dummy_int8 = 42 where id = ?'
       .then (s) -> s.execute {0: id}
-      .then (r) -> r.affected_rows
+      .then (r) -> r.n_affected_rows
       .then (affected) =>
-        assert.deepEqual [id], affected
+        assert.equal 1, affected
         @query.prepare 'select dummy_int8 from dummy where id = ?'
         .then (s) -> s.execute {0: id}
         .then (r) -> r.rows

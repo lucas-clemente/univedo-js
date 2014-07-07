@@ -1,9 +1,9 @@
 univedo = require('../dist/univedo.js').univedo
 assert = require 'assert'
 
-URL = "ws://vagrant:80/f8018f09-fb75-4d3d-8e11-44b2dc796130"
+URL = "ws://vagrant/f8018f09-fb75-4d3d-8e11-44b2dc796130"
 OPTS =
-  9744: "marvin"
+  username: "marvin"
 
 describe 'Session', ->
   beforeEach (done) ->

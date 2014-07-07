@@ -10,11 +10,9 @@ CborMajor =
 
 CborTag =
   DATETIME: 0
-  TIME: 1
-  DECIMAL: 4
-  REMOTEOBJECT: 260
+  REMOTEOBJECT: 27
   UUID: 37
-  RECORD: 262
+  RECORD: 39
 
 CborSimple =
   FALSE: 20
@@ -78,19 +76,19 @@ univedo.Message = class Message
         len = @_getLen(typeInt)
         obj = {}
         for i in [0...len]
-          obj[@shift()] = @shift()
+          key = @shift()
+          obj[key] = @shift()
         obj
       when CborMajor.TAG
         tag = @_getLen(typeInt)
         switch tag
           when CborTag.DATETIME then new Date(@shift())
-          when CborTag.TIME then new Date(@shift())
           when CborTag.UUID
             raw2Uuid(@shift())
           when CborTag.RECORD then @shift()
           when CborTag.REMOTEOBJECT
             @roCallback(@shift())
-          else throw Error "invalid tag in cbor protocol"
+          else throw Error "invalid tag in cbor protocol: " + tag
       else throw Error "invalid major in cbor protocol"
 
 
@@ -167,4 +165,4 @@ univedo.Message = class Message
           @_sendTag(CborTag.DATETIME),
           @_sendImpl(obj.toISOString())
         ])
-      else throw Error "unsupported object in cbor protocol"
+      else throw Error "unsupported object in cbor protocol: " + obj

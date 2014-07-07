@@ -35,7 +35,7 @@ univedo.Session = class Session
     @_remote_objects[msg.shift()]._receive(msg)
 
   _receiveRo: (arr) =>
-    [id, name] = arr
+    [name, id] = arr
     klass = univedo.remote_classes[name]
     throw Error "unknown remote object class " + name unless klass
     ro = new klass(this, id)

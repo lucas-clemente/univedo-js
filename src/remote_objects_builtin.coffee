@@ -1,7 +1,7 @@
 class Connection extends univedo.RemoteObject
   constructor: (session, id) ->
     super(session, id, ['ping', 'getPerspective', 'applyUts'])
-univedo.remote_classes['com.univedo.connection'] = Connection
+univedo.remote_classes['com.univedo.session'] = Connection
 
 class Perspective extends univedo.RemoteObject
   constructor: (session, id) ->
@@ -15,7 +15,16 @@ univedo.remote_classes['com.univedo.query'] = Query
 
 class Statement extends univedo.RemoteObject
   constructor: (session, id) ->
-    super(session, id, ['execute', 'getColumnNames', 'getColumnTypes'])
+    super(session, id)
+    @_columnNames = new Promise (resolve, reject) =>
+      @_on 'setColumnNames', (cols)->
+        resolve(cols)
+
+  execute: (binds = {}) ->
+    @_callRom("execute", [binds])
+
+  getColumnNames: ->
+    @_columnNames
 univedo.remote_classes['com.univedo.statement'] = Statement
 
 class Result extends univedo.RemoteObject
@@ -26,17 +35,17 @@ class Result extends univedo.RemoteObject
     # SELECT
     @_rows = []
     @rows = new Promise (resolve, reject) =>
-      @_on 'appendRow', (row) ->
+      @_on 'setTuple', (row) ->
         @_rows.push(row)
       @_on 'setComplete', ->
         resolve(@_rows)
     # UPDATE, DELETE, LINK
-    @affected_rows = new Promise (resolve, reject) =>
-      @_on 'setAffectedRecords', (records) ->
+    @n_affected_rows = new Promise (resolve, reject) =>
+      @_on 'setNAffectedRecords', (records) ->
         resolve(records)
     # INSERT
     @last_inserted_id = new Promise (resolve, reject) =>
-      @_on 'setRecord', (r) ->
+      @_on 'setId', (r) ->
         resolve(r)
 
   _onerror: (msg) ->

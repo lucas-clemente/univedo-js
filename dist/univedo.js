@@ -1,5 +1,5 @@
 /**
- * univedo v0.1.0 
+ * univedo v0.1.3 
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
@@ -89,11 +89,9 @@ CborMajor = {
 
 CborTag = {
   DATETIME: 0,
-  TIME: 1,
-  DECIMAL: 4,
-  REMOTEOBJECT: 6,
-  UUID: 7,
-  RECORD: 8
+  REMOTEOBJECT: 27,
+  UUID: 37,
+  RECORD: 38
 };
 
 CborSimple = {
@@ -138,7 +136,7 @@ univedo.Message = Message = (function() {
   };
 
   Message.prototype.shift = function() {
-    var i, len, major, obj, tag, typeInt, _i, _j, _results;
+    var i, key, len, major, obj, tag, typeInt, _i, _j, _results;
     typeInt = this._getDataView(1).getUint8(0);
     major = typeInt >> 5;
     switch (major) {
@@ -180,15 +178,14 @@ univedo.Message = Message = (function() {
         len = this._getLen(typeInt);
         obj = {};
         for (i = _j = 0; 0 <= len ? _j < len : _j > len; i = 0 <= len ? ++_j : --_j) {
-          obj[this.shift()] = this.shift();
+          key = this.shift();
+          obj[key] = this.shift();
         }
         return obj;
       case CborMajor.TAG:
         tag = this._getLen(typeInt);
         switch (tag) {
           case CborTag.DATETIME:
-            return new Date(this.shift());
-          case CborTag.TIME:
             return new Date(this.shift());
           case CborTag.UUID:
             return raw2Uuid(this.shift());
@@ -197,7 +194,7 @@ univedo.Message = Message = (function() {
           case CborTag.REMOTEOBJECT:
             return this.roCallback(this.shift());
           default:
-            throw Error("invalid tag in cbor protocol");
+            throw Error("invalid tag in cbor protocol: " + tag);
         }
         break;
       default:
@@ -282,7 +279,7 @@ univedo.Message = Message = (function() {
       case obj.constructor.name !== "Date":
         return concatArrayBufs([this._sendTag(CborTag.DATETIME), this._sendImpl(obj.toISOString())]);
       default:
-        throw Error("unsupported object in cbor protocol");
+        throw Error("unsupported object in cbor protocol: " + obj);
     }
   };
 
@@ -401,7 +398,7 @@ Connection = (function(_super) {
 
 })(univedo.RemoteObject);
 
-univedo.remote_classes['com.univedo.connection'] = Connection;
+univedo.remote_classes['com.univedo.session'] = Connection;
 
 Perspective = (function(_super) {
   __extends(Perspective, _super);
@@ -433,8 +430,26 @@ Statement = (function(_super) {
   __extends(Statement, _super);
 
   function Statement(session, id) {
-    Statement.__super__.constructor.call(this, session, id, ['execute', 'getColumnNames', 'getColumnTypes']);
+    Statement.__super__.constructor.call(this, session, id);
+    this._columnNames = new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this._on('setColumnNames', function(cols) {
+          return resolve(cols);
+        });
+      };
+    })(this));
   }
+
+  Statement.prototype.execute = function(binds) {
+    if (binds == null) {
+      binds = {};
+    }
+    return this._callRom("execute", [binds]);
+  };
+
+  Statement.prototype.getColumnNames = function() {
+    return this._columnNames;
+  };
 
   return Statement;
 
@@ -451,7 +466,7 @@ Result = (function(_super) {
     this._rows = [];
     this.rows = new Promise((function(_this) {
       return function(resolve, reject) {
-        _this._on('appendRow', function(row) {
+        _this._on('setTuple', function(row) {
           return this._rows.push(row);
         });
         return _this._on('setComplete', function() {
@@ -459,16 +474,16 @@ Result = (function(_super) {
         });
       };
     })(this));
-    this.affected_rows = new Promise((function(_this) {
+    this.n_affected_rows = new Promise((function(_this) {
       return function(resolve, reject) {
-        return _this._on('setAffectedRecords', function(records) {
+        return _this._on('setNAffectedRecords', function(records) {
           return resolve(records);
         });
       };
     })(this));
     this.last_inserted_id = new Promise((function(_this) {
       return function(resolve, reject) {
-        return _this._on('setRecord', function(r) {
+        return _this._on('setId', function(r) {
           return resolve(r);
         });
       };
@@ -542,7 +557,7 @@ univedo.Session = Session = (function() {
 
   Session.prototype._receiveRo = function(arr) {
     var id, klass, name, ro;
-    id = arr[0], name = arr[1];
+    name = arr[0], id = arr[1];
     klass = univedo.remote_classes[name];
     if (!klass) {
       throw Error("unknown remote object class " + name);
