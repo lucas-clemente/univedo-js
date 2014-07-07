@@ -64,21 +64,33 @@ univedo.Message = class Message
           when CborSimple.FLOAT64 then @_getDataView(8).getFloat64(0)
           else throw Error "invalid simple in cbor protocol"
       when CborMajor.BYTESTRING
-        len = @_getLen(typeInt)
-        @recvBuffer.slice(@recvOffset, @recvOffset += len)
+        if (typeint & 0x1f) == 31
+          throw Error "indefinite length not yet supported"
+        else
+          len = @_getLen(typeInt)
+          @recvBuffer.slice(@recvOffset, @recvOffset += len)
       when CborMajor.TEXTSTRING
-        len = @_getLen(typeInt)
-        decodeUtf8(@recvBuffer.slice(@recvOffset, @recvOffset += len))
+        if (typeint & 0x1f) == 31
+          throw Error "indefinite length not yet supported"
+        else
+          len = @_getLen(typeInt)
+          decodeUtf8(@recvBuffer.slice(@recvOffset, @recvOffset += len))
       when CborMajor.ARRAY
-        len = @_getLen(typeInt)
-        @shift() for i in [0...len]
+        if (typeint & 0x1f) == 31
+          throw Error "indefinite length not yet supported"
+        else
+          len = @_getLen(typeInt)
+          @shift() for i in [0...len]
       when CborMajor.MAP
-        len = @_getLen(typeInt)
-        obj = {}
-        for i in [0...len]
-          key = @shift()
-          obj[key] = @shift()
-        obj
+        if (typeint & 0x1f) == 31
+          throw Error "indefinite length not yet supported"
+        else
+          len = @_getLen(typeInt)
+          obj = {}
+          for i in [0...len]
+            key = @shift()
+            obj[key] = @shift()
+          obj
       when CborMajor.TAG
         tag = @_getLen(typeInt)
         switch tag
