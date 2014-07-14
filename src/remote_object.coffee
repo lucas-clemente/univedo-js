@@ -8,7 +8,7 @@ univedo.RemoteObject = class RemoteObject
   constructor: (@session, @id, method_names = []) ->
     @call_id = 0
     @calls = []
-    @notification_listeners = []
+    @notification_listeners = {}
     @session._remote_objects[@id] = this
     @_addROMs method_names
 

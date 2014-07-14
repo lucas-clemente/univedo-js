@@ -17,7 +17,7 @@ class Statement extends univedo.RemoteObject
   constructor: (session, id) ->
     super(session, id)
     @_columnNames = new Promise (resolve, reject) =>
-      @_on 'setColumnNames', (cols)->
+      @_on 'setColumnNames', (cols) ->
         resolve(cols)
 
   execute: (binds = {}) ->
