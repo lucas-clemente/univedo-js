@@ -42,7 +42,7 @@ describe 'cbor', ->
     assert.equal new univedo.Message("\xd8\x25\x50\xD5\x06\x81\xAE\xB2\xC1\x49\x4B\xB2\x6E\x7F\xA4\xF7\xEE\x61\x37".b()).shift(), "d50681ae-b2c1-494b-b26e-7fa4f7ee6137", 'reads uuids'
 
   it 'reads records', ->
-    assert.equal new univedo.Message("\xd8\x26\x18\x2a".b()).shift(), 42, 'reads record'
+    assert.equal new univedo.Message("\xd8\x27\x18\x2a".b()).shift(), 42, 'reads record'
 
   it 'reads remote objects', ->
     ro_callback = (arr) -> arr

@@ -34,7 +34,7 @@ univedo.RemoteObject = class RemoteObject
             result = message.shift()
             @calls[call_id].success(result)
             @calls[call_id] = null
-          when 2
+          when 1
             @calls[call_id].fail(message.shift())
           else
             throw Error "unknown rom answer status " + status

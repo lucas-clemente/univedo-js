@@ -19,12 +19,18 @@ class Statement extends univedo.RemoteObject
     @_columnNames = new Promise (resolve, reject) =>
       @_on 'setColumnNames', (cols) ->
         resolve(cols)
+    @_columnTypes = new Promise (resolve, reject) =>
+      @_on 'setColumnTypes', (types) ->
+        resolve(types)
 
   execute: (binds = {}) ->
     @_callRom("execute", [binds])
 
   getColumnNames: ->
     @_columnNames
+
+  getColumnTypes: ->
+    @_columnTypes
 univedo.remote_classes['com.univedo.statement'] = Statement
 
 class Result extends univedo.RemoteObject

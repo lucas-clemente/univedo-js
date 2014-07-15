@@ -44,7 +44,7 @@ describe 'remote object', ->
       .catch (err) ->
         assert.deepEqual("catastrophic error", err)
         done()
-    ro._receive([2, 0, 2, "catastrophic error"])
+    ro._receive([2, 0, 1, "catastrophic error"])
 
   it 'receives notifications', (done) ->
     ro = new univedo.RemoteObject(@session, 2)

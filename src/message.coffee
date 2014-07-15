@@ -12,7 +12,7 @@ CborTag =
   DATETIME: 0
   REMOTEOBJECT: 27
   UUID: 37
-  RECORD: 38
+  RECORD: 39
 
 CborSimple =
   FALSE: 20

@@ -1,5 +1,5 @@
 /**
- * univedo v0.1.3 
+ * univedo v0.2.0 
  * https://github.com/lucas-clemente/univedo-js
  * MIT license, (c) 2013-2014 Univedo
  */
@@ -91,7 +91,7 @@ CborTag = {
   DATETIME: 0,
   REMOTEOBJECT: 27,
   UUID: 37,
-  RECORD: 38
+  RECORD: 39
 };
 
 CborSimple = {
@@ -305,7 +305,7 @@ univedo.RemoteObject = RemoteObject = (function() {
     }
     this.call_id = 0;
     this.calls = [];
-    this.notification_listeners = [];
+    this.notification_listeners = {};
     this.session._remote_objects[this.id] = this;
     this._addROMs(method_names);
   }
@@ -339,7 +339,7 @@ univedo.RemoteObject = RemoteObject = (function() {
             result = message.shift();
             this.calls[call_id].success(result);
             return this.calls[call_id] = null;
-          case 2:
+          case 1:
             return this.calls[call_id].fail(message.shift());
           default:
             throw Error("unknown rom answer status " + status);
@@ -438,6 +438,13 @@ Statement = (function(_super) {
         });
       };
     })(this));
+    this._columnTypes = new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this._on('setColumnTypes', function(types) {
+          return resolve(types);
+        });
+      };
+    })(this));
   }
 
   Statement.prototype.execute = function(binds) {
@@ -449,6 +456,10 @@ Statement = (function(_super) {
 
   Statement.prototype.getColumnNames = function() {
     return this._columnNames;
+  };
+
+  Statement.prototype.getColumnTypes = function() {
+    return this._columnTypes;
   };
 
   return Statement;
